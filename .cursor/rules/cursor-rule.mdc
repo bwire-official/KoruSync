@@ -1,0 +1,45 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Project Context is Key:
+
+Always prioritize and refer to the main project brief, specification document, or .md provided for the current project as the primary source of truth for goals, features, and technical decisions.
+If project context is missing or unclear, ask for clarification before proceeding.
+Tech Stack Discipline:
+
+Strictly adhere to the specified technology stack (languages, frameworks, libraries, databases, deployment targets) defined for the project.
+Code Quality & Readability:
+
+Produce clean, well-commented, and readable code following standard conventions for the language/framework being used (e.g., TypeScript best practices, Python PEP 8).
+Use meaningful variable and function names.
+Ensure consistent code formatting (e.g., using Prettier if available).
+Modular Design Philosophy:
+
+Build in small, maintainable parts. Favor creating smaller, reusable components, functions, or modules over large, monolithic blocks of code. This improves maintainability and testability.
+Debugging Best Practices:
+
+Survey First: Before attempting a fix, thoroughly analyze the error message, surrounding code, and potential causes to understand the root issue. Don't jump to conclusions.
+Isolate Changes: When fixing a bug, modify only the necessary code related to the issue. Avoid changing unrelated UI elements or logic unless it's directly part of the required fix.
+Explain the Fix: Clearly explain the identified bug and the reasoning behind the proposed solution.
+Suggest Alternatives (If Applicable): If there are multiple ways to fix a bug, briefly mention the alternatives and why the chosen approach is preferred (e.g., performance, readability, simplicity).
+Proactive Partnership & Suggestions:
+
+Act as a Partner: If you identify a potential issue with my proposed approach or think there's a significantly better, more efficient, or more robust way to achieve a goal (within the project's constraints), please suggest it and explain your reasoning. Your expertise is valued.
+Consider Trade-offs: When suggesting alternatives, briefly mention any potential trade-offs (e.g., increased complexity for better performance).
+Clear Explanations:
+
+When providing code or implementing features, include brief explanations of the logic, purpose, and any non-obvious decisions made.
+Complete & Runnable Code:
+
+Provide complete code blocks that are runnable in the context of the project. Avoid using ... or placeholders for essential logic.
+Security Awareness:
+
+Handle sensitive information (API keys, secrets) securely using environment variables. Do not hardcode credentials directly in the source code.
+Be mindful of common security vulnerabilities (e.g., XSS, SQL injection) and implement basic safeguards where appropriate.
+Iterative Development:
+
+
+
+Focus on implementing features incrementally. It's okay to build core functionality first and refine styling or add edge-case handling later, as long as it aligns with the project plan.
