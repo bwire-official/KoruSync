@@ -2,27 +2,29 @@ import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useCallback, useEffect, useState } from 'react'
 import { Database } from '@/types/database'
-import type { User } from '@supabase/auth-helpers-nextjs'
+import type { User } from '@supabase/supabase-js'
 import { supabase, handleAuthError } from '@/lib/supabase'
+
+// Create a single instance of the Supabase client
+const supabaseClient = createClientComponentClient<Database>()
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClientComponentClient<Database>()
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await supabaseClient.auth.getSession()
       setUser(session?.user ?? null)
       setLoading(false)
     }
 
     getUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
     })
@@ -30,11 +32,11 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe()
     }
-  }, [supabase.auth])
+  }, [supabaseClient.auth])
 
   const signIn = useCallback(async (provider: 'google' | 'twitter' | 'apple') => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabaseClient.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -45,24 +47,70 @@ export function useAuth() {
       console.error('Error signing in:', error)
       throw error
     }
-  }, [supabase.auth])
+  }, [supabaseClient.auth])
 
-  const signInWithEmail = useCallback(async (email: string, password: string) => {
+  const signInWithEmail = useCallback(async (identifier: string, password: string) => {
     try {
       setLoading(true)
       setError(null)
 
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+      let emailToLogin: string | null = null
+
+      // Basic check if input looks like an email
+      if (identifier.includes('@')) {
+        emailToLogin = identifier
+      } else {
+        // Assume it's a username, call the RPC function
+        console.log(`Attempting to find email for username: ${identifier}`)
+        const { data: rpcData, error: rpcError } = await supabaseClient.rpc(
+          'get_email_by_username',
+          { p_username: identifier }
+        )
+
+        if (rpcError) {
+          console.error('RPC Error fetching email:', rpcError)
+          setError('Invalid login credentials.')
+          setLoading(false)
+          return
+        }
+
+        if (rpcData) {
+          console.log(`Found email: ${rpcData}`)
+          emailToLogin = rpcData
+        } else {
+          console.log(`Username not found: ${identifier}`)
+          setError('Invalid login credentials.')
+          setLoading(false)
+          return
+        }
+      }
+
+      // If we couldn't determine an email, something went wrong
+      if (!emailToLogin) {
+        setError('Invalid login credentials.')
+        setLoading(false)
+        return
+      }
+
+      const { data, error: signInError } = await supabaseClient.auth.signInWithPassword({
+        email: emailToLogin,
         password
       })
 
-      if (signInError) throw signInError
+      if (signInError) {
+        if (signInError.message.includes('Email not confirmed')) {
+          // Store email for verification
+          localStorage.setItem('verificationEmail', emailToLogin)
+          router.push('/auth/verify-otp')
+          return
+        }
+        throw signInError
+      }
 
       if (data.user) {
         // If email is not verified, redirect to verification
         if (!data.user.email_confirmed_at) {
-          sessionStorage.setItem('verificationEmail', email)
+          localStorage.setItem('verificationEmail', emailToLogin)
           router.push('/auth/verify-otp')
         } else {
           // Email is verified, proceed to dashboard
@@ -70,257 +118,119 @@ export function useAuth() {
         }
       }
     } catch (err) {
-      setError(handleAuthError(err).message)
+      setError(err instanceof Error ? err.message : 'An error occurred during login')
+      console.error('Login error:', err)
     } finally {
       setLoading(false)
     }
-  }, [supabase.auth, router])
+  }, [router])
 
-  const signUp = useCallback(async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setLoading(true)
       setError(null)
 
-      // Store email for verification before signup
-      sessionStorage.setItem('verificationEmail', email)
+      // Store email for verification
+      localStorage.setItem('verificationEmail', email)
 
-      // First, sign up the user
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // Use standard Supabase auth signup
+      const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
-          data: { full_name: fullName },
+          data: {
+            full_name: fullName
+          },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       })
 
-      if (signUpError) {
-        // Clear stored email if signup fails
-        sessionStorage.removeItem('verificationEmail')
-        throw signUpError
+      if (error) {
+        throw error
       }
 
-      if (data.user) {
-        // Wait for the user record to be created by the trigger
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
-        try {
-          // Initialize user preferences
-          const { error: initError } = await supabase
-            .from('user_preferences')
-            .insert({
-              user_id: data.user.id,
-              onboarding_completed: false,
-              theme: 'system',
-              notifications_enabled: true
-            })
-
-          if (initError) {
-            // If initialization fails, try to check if preferences already exist
-            const { data: existingPrefs, error: checkError } = await supabase
-              .from('user_preferences')
-              .select('*')
-              .eq('user_id', data.user.id)
-              .single()
-
-            if (checkError || !existingPrefs) {
-              console.error('Failed to initialize user preferences:', initError)
-              // Continue with signup even if preferences initialization fails
-              // The trigger should handle this, but we log it for debugging
-            }
-          }
-        } catch (err) {
-          console.error('Error in user preferences initialization:', err)
-          // Continue with signup even if preferences initialization fails
-        }
-
-        // Redirect to verification
-        router.push('/auth/verify-otp')
-      }
+      // Redirect to verification page
+      router.push('/auth/verify-otp')
     } catch (err) {
-      setError(handleAuthError(err).message)
+      setError(err instanceof Error ? err.message : 'An error occurred during signup')
+      console.error('Signup error:', err)
     } finally {
       setLoading(false)
     }
-  }, [supabase.auth, router])
+  }
 
   const verifyOTP = useCallback(async (otp: string) => {
-    let localLoading = false;
     try {
-      localLoading = true;
+      setLoading(true)
       setError(null)
       setSuccess(null)
 
-      const email = sessionStorage.getItem('verificationEmail')
+      const email = localStorage.getItem('verificationEmail')
       if (!email) {
-        console.error('Verification Error: No email found in session storage')
         throw new Error('No email found for verification. Please try signing up again.')
       }
 
-      // Step 1: Verify the OTP with detailed logging
-      console.log('Starting OTP verification for email:', email)
-      const { data, error: supabaseError } = await supabase.auth.verifyOtp({
+      // Use standard Supabase auth for OTP verification
+      const { data, error: supabaseError } = await supabaseClient.auth.verifyOtp({
         email,
         token: otp,
         type: 'email'
       })
 
-      // Log raw response immediately
-      console.log('Supabase verifyOtp RAW RESPONSE:', {
-        data,
-        error: supabaseError,
-        user: data?.user,
-        session: data?.session
-      })
-
       if (supabaseError) {
-        // Supabase reported an error
-        console.error('Supabase verifyOtp returned an error:', supabaseError)
-        
+        // Handle specific Supabase auth errors
         if (supabaseError.message.includes('Invalid OTP')) {
-          throw new Error('The verification code is incorrect. Please try again.')
-        }
-        if (supabaseError.message.includes('expired')) {
+          throw new Error('Invalid verification code. Please try again.')
+        } else if (supabaseError.message.includes('expired')) {
           throw new Error('This code has expired. Please request a new one.')
-        }
-        if (supabaseError.message.includes('rate limit')) {
+        } else if (supabaseError.message.includes('rate limit')) {
           throw new Error('Too many attempts. Please wait a moment before trying again.')
-        }
-        throw new Error('Email verification failed. Please try again.')
-      }
-
-      // **** SUCCESS PATH ****
-      // Supabase reported NO error, so verification WORKED
-      console.log('Verification successful according to Supabase response')
-
-      // Step 2: Clear the stored email
-      sessionStorage.removeItem('verificationEmail')
-
-      // Step 3: Update internal state with the verified data
-      if (data.user) {
-        console.log('Updating internal state with verified user:', {
-          email: data.user.email,
-          confirmed_at: data.user.email_confirmed_at,
-          user_id: data.user.id
-        })
-        setUser(data.user)
-      }
-
-      // Step 4: Refresh the session
-      console.log('Refreshing session...')
-      await supabase.auth.refreshSession()
-
-      // Step 5: Wait for database triggers to complete
-      console.log('Waiting for database triggers to complete...')
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Step 6: Check onboarding status
-      const { data: preferencesData, error: preferencesError } = await supabase
-        .from('user_preferences')
-        .select('onboarding_completed')
-        .eq('user_id', data.user.id)
-        .single()
-
-      if (preferencesError) {
-        console.error('Onboarding Check Error:', {
-          code: preferencesError.code,
-          message: preferencesError.message,
-          details: preferencesError.details,
-          hint: preferencesError.hint
-        })
-        
-        // If there's an RLS error, try to create the preferences
-        if (preferencesError.code === '42501') {
-          // Wait a bit longer for the trigger to complete
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          
-          // Try to get the preferences again
-          const { data: retryData, error: retryError } = await supabase
-            .from('user_preferences')
-            .select('onboarding_completed')
-            .eq('user_id', data.user.id)
-            .single()
-
-          if (retryError) {
-            console.error('Retry Onboarding Check Error:', {
-              code: retryError.code,
-              message: retryError.message,
-              details: retryError.details,
-              hint: retryError.hint
-            })
-            // Continue with onboarding even if preferences check fails
-            setSuccess('🎉 Email verified successfully! Please wait while we prepare your onboarding experience...')
-            await new Promise(resolve => setTimeout(resolve, 1500))
-            router.push('/onboarding')
-            return true
-          }
-
-          // Use the retry data if successful
-          if (!retryData?.onboarding_completed) {
-            setSuccess('🎉 Email verified successfully! Please wait while we prepare your onboarding experience...')
-            await new Promise(resolve => setTimeout(resolve, 1500))
-            router.push('/onboarding')
-          } else {
-            setSuccess('🎉 Email verified successfully! Redirecting to your dashboard...')
-            await new Promise(resolve => setTimeout(resolve, 1500))
-            router.push('/dashboard')
-          }
-          return true
         } else {
-          // For other errors, assume not completed
-          setSuccess('🎉 Email verified successfully! Please wait while we prepare your onboarding experience...')
-          await new Promise(resolve => setTimeout(resolve, 1500))
-          router.push('/onboarding')
-          return true
+          throw new Error(supabaseError.message)
         }
       }
 
-      // Step 7: Redirect based on onboarding status
-      if (!preferencesData?.onboarding_completed) {
-        console.log('Onboarding Status:', {
-          user_id: data.user.id,
-          onboarding_completed: false
-        })
-        setSuccess('🎉 Email verified successfully! Please wait while we prepare your onboarding experience...')
-        await new Promise(resolve => setTimeout(resolve, 1500))
+      // Clear stored email after successful verification
+      localStorage.removeItem('verificationEmail')
+
+      // Show success message
+      setSuccess('🎉 Email verified successfully! Redirecting to onboarding...')
+
+      // Redirect to onboarding after a short delay
+      setTimeout(() => {
         router.push('/onboarding')
-      } else {
-        console.log('Onboarding Status:', {
-          user_id: data.user.id,
-          onboarding_completed: true
-        })
-        setSuccess('🎉 Email verified successfully! Redirecting to your dashboard...')
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        router.push('/dashboard')
-      }
+      }, 1500)
+
     } catch (err) {
-      console.error('Verification Process Error:', {
-        error: err,
-        message: err instanceof Error ? err.message : 'Unknown error',
-        stack: err instanceof Error ? err.stack : undefined
-      })
-      setError(handleAuthError(err).message)
-      // Don't redirect on error
-      return false
+      // Handle different types of errors
+      if (err instanceof Error) {
+        if (err.message.includes('Failed to fetch')) {
+          setError('Could not connect to server. Please check your connection and try again.')
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setError('An unexpected error occurred during verification')
+      }
+      console.error('Verification error:', err)
     } finally {
-      localLoading = false;
+      setLoading(false)
     }
-    return localLoading;
-  }, [supabase.auth, router])
+  }, [router])
 
   const resendOTP = useCallback(async () => {
-    let localLoading = false;
     try {
-      localLoading = true;
+      setLoading(true)
       setError(null)
+      setSuccess(null)
 
-      const email = sessionStorage.getItem('verificationEmail')
+      const email = localStorage.getItem('verificationEmail')
       if (!email) {
         throw new Error('No email found for verification. Please try signing up again.')
       }
 
-      // Send new verification email
-      const { error: resendError } = await supabase.auth.resend({
+      // Use standard Supabase auth for resending verification
+      const { error: resendError } = await supabaseClient.auth.resend({
         type: 'signup',
         email,
         options: {
@@ -329,34 +239,45 @@ export function useAuth() {
       })
 
       if (resendError) {
+        // Handle specific Supabase auth errors
         if (resendError.message.includes('rate limit')) {
-          throw new Error('Please wait a moment before requesting another code.')
+          throw new Error('Too many attempts. Please wait a moment before trying again.')
+        } else {
+          throw new Error(resendError.message || 'Failed to resend verification code.')
         }
-        throw resendError
       }
 
       // Show success message
-      setError('New verification code sent! Please check your email.')
+      setSuccess('New verification code sent! Please check your email.')
     } catch (err) {
-      setError(handleAuthError(err).message)
+      // Handle different types of errors
+      if (err instanceof Error) {
+        if (err.message.includes('Failed to fetch')) {
+          setError('Could not connect to server. Please check your connection and try again.')
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setError('An unexpected error occurred while resending the code')
+      }
+      console.error('Resend error:', err)
     } finally {
-      localLoading = false;
+      setLoading(false)
     }
-    return localLoading;
-  }, [supabase.auth])
+  }, [])
 
   const signOut = useCallback(async () => {
     try {
       setLoading(true)
-      const { error } = await supabase.auth.signOut()
+      const { error } = await supabaseClient.auth.signOut()
       if (error) throw error
       router.push('/auth/login')
     } catch (err) {
-      setError(handleAuthError(err).message)
+      setError(err instanceof Error ? err.message : 'An error occurred during sign out')
     } finally {
       setLoading(false)
     }
-  }, [supabase.auth, router])
+  }, [router])
 
   return {
     user,

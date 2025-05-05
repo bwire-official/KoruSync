@@ -22,7 +22,7 @@ export default function VerifyOTPPage() {
   // Get email from session storage
   const [email, setEmail] = useState('')
   useEffect(() => {
-    const storedEmail = sessionStorage.getItem('verificationEmail')
+    const storedEmail = localStorage.getItem('verificationEmail')
     if (storedEmail) {
       setEmail(storedEmail)
     } else {
@@ -48,13 +48,11 @@ export default function VerifyOTPPage() {
     if (loading || !otp || isVerifying) return
     
     setIsVerifying(true)
-    setIsResending(false)
     
     try {
-      const result = await verifyOTP(otp)
-      if (result) {
-        setIsResending(true)
-      }
+      await verifyOTP(otp)
+    } catch (error) {
+      console.error('Verification error:', error)
     } finally {
       setIsVerifying(false)
     }
@@ -120,7 +118,7 @@ export default function VerifyOTPPage() {
           Enter the 6-digit code sent to {email}
         </p>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
               {error}
@@ -131,51 +129,50 @@ export default function VerifyOTPPage() {
               {success}
             </div>
           )}
-          <div className="space-y-2">
-            <div className="relative group">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
-              <Input 
-                id="otp" 
-                type="text" 
-                placeholder="Enter 6-digit code" 
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                error={getErrorMessage()}
-                required 
-                disabled={loading || isVerifying}
-                className="pl-10 text-center tracking-widest"
-              />
-              {isVerifying && (
-                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-500 dark:text-emerald-500 animate-spin" />
-              )}
-            </div>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={!canResend || loading || isVerifying}
-                className={`text-sm ${
-                  canResend 
-                    ? 'text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300' 
-                    : 'text-gray-400 dark:text-gray-500'
-                }`}
-              >
-                {canResend ? 'Resend code' : `Resend in ${resendCooldown}s`}
-              </button>
-            </div>
-
-            <Button 
-              type="submit" 
-              fullWidth 
-              isLoading={loading || isVerifying}
-              disabled={loading || isVerifying || otp.length !== 6}
-              className="mt-6"
-            >
-              {isVerifying ? 'Verifying...' : 'Verify Email'}
-            </Button>
+          
+          <div className="relative group">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
+            <Input 
+              id="otp" 
+              type="text" 
+              placeholder="Enter 6-digit code" 
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              error={getErrorMessage()}
+              required 
+              disabled={loading || isVerifying}
+              className="pl-10 text-center tracking-widest"
+            />
+            {isVerifying && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-500 dark:text-emerald-500 animate-spin" />
+            )}
           </div>
-        </div>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={!canResend || loading || isVerifying}
+              className={`text-sm ${
+                canResend 
+                  ? 'text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300' 
+                  : 'text-gray-400 dark:text-gray-500'
+              }`}
+            >
+              {canResend ? 'Resend code' : `Resend in ${resendCooldown}s`}
+            </button>
+          </div>
+
+          <Button 
+            type="submit" 
+            fullWidth 
+            isLoading={loading || isVerifying}
+            disabled={loading || isVerifying || otp.length !== 6}
+            className="mt-6"
+          >
+            {isVerifying ? 'Verifying...' : 'Verify Email'}
+          </Button>
+        </form>
       </div>
     </AuthLayout>
   )

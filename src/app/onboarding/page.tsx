@@ -30,6 +30,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { theme, toggleTheme } = useTheme()
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -43,34 +44,59 @@ export default function OnboardingPage() {
 
   const handleNextStep = async (data: Partial<StepData>) => {
     setLoading(true)
+    setError(null)
     try {
       // Update step data
       setStepData(prev => ({ ...prev, ...data }))
 
       // If this is the final step, update the user's profile
       if (currentStep === 'intro') {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('No authenticated user found')
+        console.log('Starting final step completion...')
+        
+        // First check if we have a valid session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) {
+          console.error('Session error:', sessionError)
+          throw new Error('Failed to get session')
+        }
+        if (!session) {
+          console.error('No active session found')
+          throw new Error('No active session found')
+        }
+        console.log('Session found:', session.user.id)
 
         // Update user profile data
-        const { error: userError } = await supabase
+        console.log('Attempting to update user profile...')
+        const { data: userData, error: userError } = await supabase
           .from('users')
           .update({
             username: stepData.username,
             timezone: stepData.timezone
           })
-          .eq('id', user.id)
+          .eq('id', session.user.id)
+          .select()
 
-        if (userError) throw userError
+        console.log('Update user result:', { userData, userError })
+        if (userError) {
+          console.error('ERROR updating user profile:', userError)
+          throw new Error('Failed to update user profile')
+        }
 
         // Update onboarding completion status
-        const { error: prefError } = await supabase
+        console.log('Attempting to update onboarding completion status...')
+        const { data: prefData, error: prefError } = await supabase
           .from('user_preferences')
           .update({ onboarding_completed: true })
-          .eq('user_id', user.id)
+          .eq('user_id', session.user.id)
+          .select()
 
-        if (prefError) throw prefError
+        console.log('Update preferences result:', { prefData, prefError })
+        if (prefError) {
+          console.error('ERROR updating preferences:', prefError)
+          throw new Error('Failed to update preferences')
+        }
 
+        console.log('All updates successful, attempting redirect to /dashboard...')
         router.push('/dashboard')
         return
       }
@@ -80,7 +106,16 @@ export default function OnboardingPage() {
       const currentIndex = steps.indexOf(currentStep)
       setCurrentStep(steps[currentIndex + 1])
     } catch (error) {
-      console.error('Error updating user profile:', error)
+      console.error('Error in handleNextStep:', error)
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          setError('Could not connect to server. Please check your connection and try again.')
+        } else {
+          setError(error.message)
+        }
+      } else {
+        setError('An unexpected error occurred')
+      }
     } finally {
       setLoading(false)
     }

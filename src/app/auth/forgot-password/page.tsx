@@ -4,90 +4,88 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Sun, Moon, Mail } from 'lucide-react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import type { Database } from '@/types/database'
 import AuthLayout from '../layout'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const { theme, toggleTheme } = useTheme()
+  
+  // Initialize Supabase client
+  const supabase = createClientComponentClient<Database>()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (loading) return
+    if (isLoading) return
 
-    setLoading(true)
-    setError('')
-    setSuccess(false)
+    setIsLoading(true)
+    setErrorMessage(null)
+    setSuccessMessage(null)
 
     try {
-      // TODO: Implement forgot password logic with email link
-      // await sendPasswordResetLink(email)
-      setSuccess(true)
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      })
+
+      if (error) {
+        console.error('Password reset error:', error)
+        setErrorMessage('Failed to send reset instructions. Please try again later.')
+      } else {
+        setSuccessMessage('If an account exists for this email, password reset instructions have been sent.')
+        setEmail('')
+      }
     } catch (err) {
-      setError('Failed to send reset link. Please try again.')
+      console.error('Unexpected error:', err)
+      setErrorMessage('An unexpected error occurred. Please try again later.')
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
   return (
     <AuthLayout>
-      <div className="w-full max-w-sm bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 transition-all duration-300 ease-in-out">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Link 
-            href="/auth/login" 
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 ease-in-out"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+      <div className="w-full max-w-md bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700 relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+          </div>
+        )}
+        
+        {/* Card Header */}
+        <div className="flex items-center justify-between mb-8">
+          <Link href="/auth/login" className="text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors">
+            <ArrowLeft className="w-5 h-5" />
           </Link>
+          <div className="flex flex-col items-center">
+            <Image src="/logo.svg" alt="KoruSync Logo" width={40} height={40} className="mb-1" />
+            <span className="text-xl font-bold text-cyan-600 dark:text-emerald-400 font-inter">KoruSync</span>
+          </div>
           <button
             onClick={toggleTheme}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 ease-in-out"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? (
-              <Sun className="w-5 h-5 text-cyan-500" />
-            ) : (
-              <Moon className="w-5 h-5 text-emerald-500" />
-            )}
+            {theme === 'dark' ? <Sun className="w-5 h-5 text-cyan-500" /> : <Moon className="w-5 h-5 text-emerald-500" />}
           </button>
         </div>
 
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="relative w-8 h-8 mb-2">
-            <Image 
-              src="/logo.svg" 
-              alt="KoruSync Logo" 
-              fill 
-              className="object-contain transition-transform duration-300 hover:scale-110" 
-            />
-          </div>
-          <span className="text-lg font-bold bg-gradient-to-r from-cyan-500 to-emerald-500 bg-clip-text text-transparent">
-            KoruSync
-          </span>
-        </div>
-
-        <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-1">Forgot Password</h2>
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Enter your email address and we'll send you a password reset link
+        <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2">Reset your password</h2>
+        <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
+          Enter your email address and we'll send you a link to reset your password.
         </p>
-        
-        {success ? (
+
+        {successMessage ? (
           <div className="text-center space-y-4">
             <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
               <p className="text-emerald-600 dark:text-emerald-400">
-                Reset link sent! Please check your email.
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Click the link in the email to reset your password.
+                {successMessage}
               </p>
             </div>
             <Link 
@@ -104,12 +102,12 @@ export default function ForgotPasswordPage() {
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="Email Address" 
+                placeholder="Enter your email" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
-                error={error}
+                error={errorMessage}
                 required 
-                disabled={loading}
+                disabled={isLoading}
                 className="pl-10"
               />
             </div>
@@ -117,24 +115,14 @@ export default function ForgotPasswordPage() {
             <Button 
               type="submit" 
               fullWidth 
-              isLoading={loading} 
-              disabled={loading} 
+              isLoading={isLoading} 
+              disabled={isLoading} 
               className="mt-6"
             >
               Send Reset Link
             </Button>
           </form>
         )}
-
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
-          Remember your password?{' '}
-          <Link 
-            href="/auth/login" 
-            className="text-cyan-600 dark:text-cyan-400 hover:underline transition-colors duration-200"
-          >
-            Log in
-          </Link>
-        </p>
       </div>
     </AuthLayout>
   )

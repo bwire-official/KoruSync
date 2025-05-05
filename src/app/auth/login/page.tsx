@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { SocialButton } from '@/components/ui/SocialButton'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
+import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons'
 
 export default function LoginPage() {
   const [form, setForm] = useState({
@@ -74,11 +75,10 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative group">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
-          <Input 
-            label="Email" 
+          <Input  
             id="email" 
-            type="email" 
-            placeholder="Enter your email" 
+            type="text" 
+            placeholder="Email or Username" 
             value={form.email} 
             onChange={handleChange} 
             required 
@@ -141,16 +141,18 @@ export default function LoginPage() {
         </p>
       </form>
 
-      <div className="flex items-center my-6">
-        <div className="flex-grow border-t border-gray-200 dark:border-gray-700" />
-        <span className="mx-3 text-xs text-gray-400">or continue with</span>
-        <div className="flex-grow border-t border-gray-200 dark:border-gray-700" />
-      </div>
-
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <SocialButton provider="google" disabled={loading} onClick={() => signIn('google')}>Google</SocialButton>
-        <SocialButton provider="twitter" disabled={loading} onClick={() => signIn('twitter')}>X</SocialButton>
-        <SocialButton provider="apple" disabled={loading} onClick={() => signIn('apple')}>Apple</SocialButton>
+      <div className="space-y-4">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+        </div>
+        <SocialLoginButtons />
       </div>
 
       <p className="text-center text-sm text-gray-600 dark:text-gray-400">

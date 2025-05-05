@@ -57,10 +57,10 @@ export function LoginForm() {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input 
-            label="Email" 
+            label="Email or Username" 
             id="email" 
-            type="email" 
-            placeholder="Enter your email" 
+            type="text" 
+            placeholder="you@example.com or your_username" 
             value={form.email} 
             onChange={handleChange} 
             required 
