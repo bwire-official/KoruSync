@@ -1,46 +1,65 @@
 'use client'
 
 import { createContext, useContext, ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth'; // Assuming useAuth returns all these values
+import { useAuth } from '@/hooks/useAuth';
 import type { User } from '@supabase/auth-helpers-nextjs';
 
-// Define the full shape of the context value, matching the return type of useAuth
+/**
+ * Auth provider types supported by the application
+ */
+type AuthProvider = 'google'; // Expandable: 'twitter' | 'apple'
+
+/**
+ * Complete authentication context interface defining all
+ * available authentication methods and state
+ */
 interface AuthContextType {
+  // Authentication state
   user: User | null;
   loading: boolean;
-  error: string | null; // Added from useAuth return
-  success: string | null; // Added from useAuth return
-  signIn: (provider: 'google' /*| 'twitter' | 'apple'*/) => Promise<void>; // Adjusted based on previous decisions
-  // Ensure identifier is used if login allows username/email
+  error: string | null;
+  success: string | null;
+  
+  // Authentication methods
+  signIn: (provider: AuthProvider) => Promise<void>;
   signInWithEmail: (identifier: string, password: string) => Promise<void>;
-  // *** CORRECTED SIGNATURE FOR signUp ***
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
-  verifyOTP: (otp: string) => Promise<void>; // Added from useAuth return
-  resendOTP: () => Promise<void>; // Added from useAuth return
+  
+  // OTP related methods
+  verifyOTP: (otp: string) => Promise<void>;
+  resendOTP: () => Promise<void>;
 }
 
-// Create the context with the defined type, initially undefined
+// Create context with proper typing and undefined initial value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// AuthProvider component that uses the useAuth hook and provides its value
+/**
+ * Authentication Provider component that wraps the application
+ * and provides authentication state and methods to all children
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const auth = useAuth(); // Get all auth state and functions from the hook
+  // Get all auth state and functions from the hook
+  const auth = useAuth();
 
   return (
-    // Provide the entire auth object from useAuth as the context value
     <AuthContext.Provider value={auth}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Custom hook to easily consume the AuthContext
-export function useAuthContext() {
+/**
+ * Custom hook to access authentication context from any component
+ * @returns {AuthContextType} The authentication context value
+ * @throws {Error} If used outside of AuthProvider
+ */
+export function useAuthContext(): AuthContextType {
   const context = useContext(AuthContext);
+  
   if (context === undefined) {
-    // This error ensures the hook is used within an AuthProvider
     throw new Error('useAuthContext must be used within an AuthProvider');
   }
+  
   return context;
 }

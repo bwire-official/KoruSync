@@ -15,6 +15,7 @@ import type { Database } from '@/types/database'; // Assuming types exist
 import { useTheme } from '@/contexts/ThemeContext'; // Assuming this context exists
 // *** ADDED/VERIFIED IMPORTS FOR ALERT ***
 import { Alert, AlertDescription } from "@/components/ui/alert"; // Verify this path is correct for your project
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Define the possible steps
 type Step = 'welcome' | 'username' | 'timezone' | 'pillars' | 'intro';
@@ -183,54 +184,89 @@ export default function OnboardingPage() {
     switch (currentStep) {
       case 'welcome':
         return (
-          <div className="space-y-6 text-center">
-            <div className="flex justify-center">
-              <div className="w-16 h-16 rounded-full bg-emerald-500 dark:bg-emerald-600 flex items-center justify-center shadow-lg">
-                <CheckCircle className="w-8 h-8 text-white" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6 text-center"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex justify-center"
+            >
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
+                <CheckCircle className="w-10 h-10 text-white" />
               </div>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Welcome to KoruSync!
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Let's quickly set up your workspace for balanced productivity.
-            </p>
-            <div className="space-y-3 text-left pt-4">
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Welcome to KoruSync!
+              </h2>
+              <p className="text-base text-gray-600 dark:text-gray-400 mt-2">
+                Let's quickly set up your workspace for balanced productivity.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="space-y-4 text-left"
+            >
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 We'll help you configure:
               </p>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {[
-                  { icon: User, text: 'Your unique username' },
-                  { icon: Clock, text: 'Your local timezone' },
-                  { icon: Layers, text: 'Your core life pillars' },
+                  { icon: User, text: 'Your unique username', color: '#10B981' },
+                  { icon: Clock, text: 'Your local timezone', color: '#06B6D4' },
+                  { icon: Layers, text: 'Your core life pillars', color: '#8B5CF6' }
                 ].map((item, index) => (
-                  <li key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />
+                  <motion.li
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 + index * 0.1 }}
+                    className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${item.color}20` }}
+                    >
+                      <item.icon className="w-4 h-4" style={{ color: item.color }} />
                     </div>
                     <span className="text-sm text-gray-700 dark:text-gray-200">{item.text}</span>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
-            </div>
-            <Button
-              onClick={() => handleNextStep({})}
-              isLoading={loading}
-              disabled={loading}
-              className="w-full mt-6"
-              variant="primary"
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
             >
-              Let's Go!
-            </Button>
-          </div>
+              <Button
+                onClick={() => handleNextStep({})}
+                isLoading={loading}
+                disabled={loading}
+                className="w-full mt-6 py-3 text-base font-medium"
+                variant="primary"
+              >
+                Let's Go!
+              </Button>
+            </motion.div>
+          </motion.div>
         );
       case 'username':
         return (
           <UsernameStep
-            initialUsername={stepData.username || ''}
-            // Ensure data passed back matches expected structure if UsernameStep modifies StepData directly
-            onComplete={(data) => handleNextStep(data as Partial<OnboardingStepData>)}
+            initialUsername={stepData.username}
+            onComplete={(data) => handleNextStep(data)}
             loading={loading}
           />
         );
@@ -238,7 +274,7 @@ export default function OnboardingPage() {
         return (
           <TimezoneStep
             initialTimezone={stepData.timezone}
-            onComplete={(data) => handleNextStep(data as Partial<OnboardingStepData>)}
+            onComplete={(data) => handleNextStep(data)}
             loading={loading}
           />
         );
@@ -248,7 +284,7 @@ export default function OnboardingPage() {
           <PillarsStep
             initialPillars={stepData.pillars}
             // Ensure data passed back matches expected structure
-            onComplete={(data) => handleNextStep(data as Partial<OnboardingStepData>)}
+            onComplete={(data) => handleNextStep(data)}
             loading={loading}
           />
         );
@@ -266,27 +302,37 @@ export default function OnboardingPage() {
 
   // Main return for the OnboardingPage component
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col font-inter">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-inter">
       <div className="flex-1 flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-lg">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sm:p-8 space-y-6 relative overflow-hidden">
-
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 space-y-6 relative overflow-hidden"
+          >
             {/* Loading Overlay */}
-            {loading && (
-              <div className="absolute inset-0 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-              </div>
-            )}
+            <AnimatePresence>
+              {loading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10"
+                >
+                  <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
               {currentStep !== 'welcome' ? (
                 <Button
                   type="button"
-                  variant="secondary" // Changed from ghost
+                  variant="outline"
                   onClick={handleBack}
                   disabled={loading}
-                  className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                  className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   aria-label="Go back"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -297,8 +343,11 @@ export default function OnboardingPage() {
               {/* Progress Indicator */}
               <div className="flex justify-center gap-2">
                 {['welcome', 'username', 'timezone', 'pillars', 'intro'].map((step, index, arr) => (
-                  <div
+                  <motion.div
                     key={step}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: index * 0.1 }}
                     className={`w-2 h-2 rounded-full transition-colors duration-300 ${
                       index <= arr.indexOf(currentStep)
                         ? 'bg-emerald-500 dark:bg-emerald-400'
@@ -322,19 +371,28 @@ export default function OnboardingPage() {
 
             {/* Display overall error message if exists */}
             {/* *** ENSURE Alert components are imported correctly *** */}
-            {error && (
-               <Alert variant="destructive" className="mb-4">
-                 {/* Added key prop for list rendering */}
-                 <AlertCircle className="h-4 w-4" key="error-icon"/>
-                 <AlertDescription key="error-desc">{error}</AlertDescription>
-               </Alert>
-            )}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Step Content */}
             <div className="mt-4 min-h-[300px]">
-              {renderStep()}
+              <AnimatePresence mode="wait">
+                {renderStep()}
+              </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

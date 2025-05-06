@@ -2,7 +2,7 @@ import './globals.css' // Ensure this imports Tailwind base styles etc.
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'; // Import the Next.js Script component
-import { AuthProvider } from '@/contexts/AuthContext' // Verify path
+import { AuthProvider } from '@/contexts/AuthContext' 
 import { ThemeProvider as NextThemesProvider } from 'next-themes' // Import and alias next-themes
 import { ThemeProvider as CustomThemeProvider } from '@/contexts/ThemeContext' // Your custom theme provider (verify path)
 import { LoadingProvider } from '@/components/providers/LoadingProvider' // Verify path

@@ -51,33 +51,45 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthLayout>
-      <div className="w-full max-w-md bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700 relative">
-        {isLoading && (
-          <div className="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
-          </div>
-        )}
-        
-        {/* Card Header */}
+      <div className="w-full max-w-sm bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-gray-700 transition-all duration-300 ease-in-out">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Link href="/auth/login" className="text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors">
-            <ArrowLeft className="w-5 h-5" />
+          <Link 
+            href="/auth/login" 
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 ease-in-out"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </Link>
-          <div className="flex flex-col items-center">
-            <Image src="/logo.svg" alt="KoruSync Logo" width={40} height={40} className="mb-1" />
-            <span className="text-xl font-bold text-cyan-600 dark:text-emerald-400 font-inter">KoruSync</span>
-          </div>
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 ease-in-out"
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="w-5 h-5 text-cyan-500" /> : <Moon className="w-5 h-5 text-emerald-500" />}
+            {theme === 'dark' ? (
+              <Sun className="w-5 h-5 text-cyan-500" />
+            ) : (
+              <Moon className="w-5 h-5 text-emerald-500" />
+            )}
           </button>
         </div>
 
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative w-10 h-10 mb-3">
+            <Image 
+              src="/logo.svg" 
+              alt="KoruSync Logo" 
+              fill 
+              className="object-contain transition-transform duration-300 hover:scale-110" 
+            />
+          </div>
+          <span className="text-xl font-bold bg-gradient-to-r from-cyan-500 to-emerald-500 bg-clip-text text-transparent">
+            KoruSync
+          </span>
+        </div>
+
         <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2">Reset your password</h2>
-        <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-8">
           Enter your email address and we'll send you a link to reset your password.
         </p>
 
@@ -98,7 +110,7 @@ export default function ForgotPasswordPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative group">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
               <Input 
                 id="email" 
                 type="email" 
@@ -108,7 +120,8 @@ export default function ForgotPasswordPage() {
                 error={errorMessage || undefined}
                 required 
                 disabled={isLoading}
-                className="pl-10"
+                className="pl-11"
+                size="lg"
               />
             </div>
 
@@ -117,6 +130,7 @@ export default function ForgotPasswordPage() {
               fullWidth 
               isLoading={isLoading} 
               disabled={isLoading} 
+              size="lg"
               className="mt-6"
             >
               Send Reset Link

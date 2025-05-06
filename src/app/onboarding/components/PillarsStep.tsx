@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Layers, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/Input'; // Verify path
 import { Button } from '@/components/ui/Button'; // Verify path
 import { Label } from '@/components/ui/label'; // Assuming Label is needed/available
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Define the structure for a pillar object
 interface Pillar {
@@ -21,7 +22,18 @@ interface PillarsStepProps {
 }
 
 // Default colors to cycle through for new pillars
-const DEFAULT_COLORS = ['#34D399', '#60A5FA', '#FBBF24', '#F87171', '#A78BFA', '#FB923C'];
+const DEFAULT_COLORS = [
+  '#34D399', // Emerald
+  '#60A5FA', // Blue
+  '#FBBF24', // Yellow
+  '#F87171', // Red
+  '#A78BFA', // Purple
+  '#FB923C', // Orange
+  '#2DD4BF', // Teal
+  '#F472B6', // Pink
+  '#818CF8', // Indigo
+  '#4ADE80', // Green
+];
 
 // Preset pillar names (only names)
 const PRESET_PILLAR_NAMES = [
@@ -34,13 +46,19 @@ const PRESET_PILLAR_NAMES = [
   'Family',
   'Social Life',
   'Hobbies & Creativity',
-  'Community Service'
+  'Community Service',
+  'Web3 & Crypto',
+  'Education',
+  'Travel',
+  'Home & Living',
+  'Wellness & Self-Care'
 ];
 
 export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStepProps) {
   // State now holds an array of Pillar objects
   const [pillars, setPillars] = useState<Pillar[]>([]);
   const [newPillarName, setNewPillarName] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   // Initialize state with initialPillars only once
   useEffect(() => {
@@ -62,143 +80,214 @@ export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStep
     if (trimmedName && !pillarExists(trimmedName)) {
       const newPillar: Pillar = {
         name: trimmedName,
-        color: getNextColor(), // Assign a default color
+        color: getNextColor(),
       };
       setPillars([...pillars, newPillar]);
-      setNewPillarName(''); // Clear input only if adding custom
+      setNewPillarName('');
+      setError(null);
+    } else if (pillarExists(trimmedName)) {
+      setError('This pillar already exists');
     }
   };
 
   const handleRemovePillar = (pillarToRemove: Pillar) => {
     setPillars(pillars.filter(pillar => pillar.name !== pillarToRemove.name));
+    setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Ensure at least one pillar is selected (adjust min if needed)
     if (loading || pillars.length === 0) {
-        // Optionally set an error state here to inform the user
-        console.error("Please select at least one pillar.");
-        return;
+      setError('Please select at least one pillar');
+      return;
     }
-    // Pass the array of Pillar objects
-    onComplete({ pillars });
+    try {
+      onComplete({ pillars });
+    } catch (error) {
+      console.error('Error saving pillars:', error);
+      setError('Failed to save pillars. Please try again.');
+    }
   };
 
   return (
-    <>
-      <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-1">
-        Define Your Life Pillars
-      </h2>
-      <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6">
-        Select or add the key areas you want to balance and track (e.g., Web3, School, Health).
-      </p>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-8"
+    >
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="flex justify-center"
+      >
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
+          <Layers className="w-10 h-10 text-white" />
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="text-center"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Define Your Life Pillars
+        </h2>
+        <p className="text-base text-gray-600 dark:text-gray-400">
+          Select or add the key areas you want to balance and track
+        </p>
+      </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Preset Pillars Section */}
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-500 dark:text-gray-400">Choose from presets:</Label>
-          <div className="flex flex-wrap gap-2">
-            {PRESET_PILLAR_NAMES.map((name) => {
-              const isSelected = pillarExists(name);
-              return (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => {
-                    if (!isSelected) {
-                      handleAddPillar(name); // Add with default color
-                    } else {
-                      // Find the pillar object to remove
-                      const pillarToRemove = pillars.find(p => p.name === name);
-                      if (pillarToRemove) {
-                        handleRemovePillar(pillarToRemove);
-                      }
-                    }
-                  }}
-                  // Toggle appearance based on selection
-                  className={`px-3 py-1 text-sm rounded-lg transition-colors duration-200 border ${
-                    isSelected
-                      ? 'bg-emerald-500 dark:bg-emerald-600 text-white border-emerald-500 dark:border-emerald-600' // Use consistent color for selected
-                      : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  {name} {isSelected ? <X className="inline w-3 h-3 ml-1" /> : <Plus className="inline w-3 h-3 ml-1" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Custom Pillar Input Section */}
-        <div className="space-y-2">
-           <Label htmlFor="custom-pillar" className="text-sm text-gray-500 dark:text-gray-400">Add a custom pillar:</Label>
-           <div className="flex gap-2">
-             <Input
-               id="custom-pillar"
-               type="text"
-               placeholder="e.g., Side Project"
-               value={newPillarName}
-               onChange={(e) => setNewPillarName(e.target.value)}
-               className="flex-1"
-               disabled={loading}
-             />
-             <Button
-               type="button"
-               variant="secondary" // Use secondary or outline
-               onClick={() => handleAddPillar(newPillarName)}
-               // Disable if input is empty or pillar already exists
-               disabled={!newPillarName.trim() || pillarExists(newPillarName.trim()) || loading}
-               aria-label="Add custom pillar"
-             >
-               <Plus className="w-4 h-4" />
-             </Button>
-           </div>
-        </div>
-
-
-        {/* Selected Pillars Display Section */}
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-500 dark:text-gray-400">Your selected pillars:</Label>
-          {pillars.length === 0 ? (
-             <p className="text-xs text-gray-400 dark:text-gray-500 italic">Select or add at least one pillar.</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {pillars.map((pillar) => (
-                <div
-                  key={pillar.name} // Use name as key assuming names are unique per user
-                  className="flex items-center gap-1.5 pl-2 pr-1 py-1 text-white rounded-lg text-sm"
-                  // Use the pillar's specific color for background
-                  style={{ backgroundColor: pillar.color }}
-                >
-                  <span>{pillar.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePillar(pillar)}
-                    className="opacity-70 hover:opacity-100 p-0.5 rounded-full hover:bg-black/10"
-                    aria-label={`Remove ${pillar.name}`}
-                    disabled={loading}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          isLoading={loading}
-          // Disable if no pillars are selected
-          disabled={loading || pillars.length === 0}
-          className="w-full mt-6"
-          variant="primary"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="space-y-6"
         >
-          Continue
-        </Button>
+          {/* Preset Pillars Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-violet-500" />
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Choose from presets:
+              </Label>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {PRESET_PILLAR_NAMES.map((name, index) => {
+                const isSelected = pillarExists(name);
+                return (
+                  <motion.button
+                    key={name}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    type="button"
+                    onClick={() => {
+                      if (!isSelected) {
+                        handleAddPillar(name);
+                      } else {
+                        const pillarToRemove = pillars.find(p => p.name === name);
+                        if (pillarToRemove) {
+                          handleRemovePillar(pillarToRemove);
+                        }
+                      }
+                    }}
+                    className={`px-4 py-2 text-sm rounded-xl transition-all duration-200 border ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white border-transparent shadow-md'
+                        : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-sm hover:shadow-md'
+                    }`}
+                  >
+                    {name} {isSelected ? <X className="inline w-3 h-3 ml-1" /> : <Plus className="inline w-3 h-3 ml-1" />}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Custom Pillar Input Section */}
+          <div className="space-y-3">
+            <Label htmlFor="custom-pillar" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Add a custom pillar:
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="custom-pillar"
+                type="text"
+                placeholder="e.g., Side Project"
+                value={newPillarName}
+                onChange={(e) => setNewPillarName(e.target.value)}
+                className="flex-1"
+                disabled={loading}
+                error={error}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => handleAddPillar(newPillarName)}
+                disabled={!newPillarName.trim() || pillarExists(newPillarName.trim()) || loading}
+                className="px-4"
+                aria-label="Add custom pillar"
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Selected Pillars Display Section */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Your selected pillars:
+            </Label>
+            <AnimatePresence>
+              {pillars.length === 0 ? (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-sm text-gray-400 dark:text-gray-500 italic"
+                >
+                  Select or add at least one pillar.
+                </motion.p>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-wrap gap-2"
+                >
+                  {pillars.map((pillar, index) => (
+                    <motion.div
+                      key={pillar.name}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="group relative"
+                    >
+                      <div
+                        className="flex items-center gap-2 pl-3 pr-2 py-2 text-white rounded-xl text-sm shadow-sm hover:shadow-md transition-all duration-200"
+                        style={{ backgroundColor: pillar.color }}
+                      >
+                        <span>{pillar.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePillar(pillar)}
+                          className="opacity-70 hover:opacity-100 p-1 rounded-lg hover:bg-black/10 transition-all duration-200"
+                          aria-label={`Remove ${pillar.name}`}
+                          disabled={loading}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <Button
+            type="submit"
+            isLoading={loading}
+            disabled={loading || pillars.length === 0}
+            className="w-full mt-6 py-3 text-base font-medium"
+            variant="primary"
+          >
+            Continue
+          </Button>
+        </motion.div>
       </form>
-    </>
+    </motion.div>
   );
 }
