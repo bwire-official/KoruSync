@@ -100,8 +100,8 @@ export async function middleware(req: NextRequest) {
     // User's email is verified, but onboarding isn't done.
     // Force them to the onboarding flow, unless they are already there.
     if (!isOnboardingRoute) {
-      console.log('Middleware Redirecting: Onboarding incomplete -> /onboarding/step-1');
-      return NextResponse.redirect(new URL('/onboarding/step-1', req.url));
+      console.log('Middleware Redirecting: Onboarding incomplete -> /onboarding');
+      return NextResponse.redirect(new URL('/onboarding', req.url));
     }
     // Allow staying on onboarding pages if not complete
     console.log('Middleware Allowing: Onboarding incomplete, staying on /onboarding.');
