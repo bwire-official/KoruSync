@@ -1,97 +1,126 @@
-'use client'
+'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, Suspense } from 'react';
-import { PageLoader } from '../ui/Loader'; // Verify path
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  Suspense, // Import Suspense
+  useCallback, // Import useCallback
+} from 'react';
+import { PageLoader } from '../ui/Loader'; // Verify path is correct
 import { usePathname, useSearchParams } from 'next/navigation';
 
+// Define the shape of the context value
 interface LoadingContextType {
   isLoading: boolean;
   startLoading: () => void;
   stopLoading: () => void;
 }
 
+// Create the context
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
-// Minimum time to show loader (in milliseconds)
-const MIN_LOADING_TIME = 500; // Reduced slightly, adjust as needed
+// Minimum time to display the loader (in milliseconds) to prevent flashing
+const MIN_LOADING_TIME = 500; // Adjust as needed
 
-// NEW: Internal component to handle route change detection
+/**
+ * Internal component specifically to listen for route changes using client hooks.
+ * This component is wrapped in Suspense by the provider.
+ */
 function RouteChangeListener() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { startLoading, stopLoading } = useLoading(); // Get functions from context
+  // Get loading functions from the context provider
+  const { startLoading, stopLoading } = useLoading();
 
-  // Effect to trigger loading on route changes
+  // This effect runs when the pathname or searchParams change
   useEffect(() => {
     console.log('RouteChangeListener: Route changed, starting loading...');
-    startLoading(); // Trigger loading state
+    startLoading(); // Show the loader
 
-    // Use a timer to ensure minimum loading time
-    // Note: This simple timer might not perfectly align with actual page load,
-    // but it provides a basic minimum display time.
-    // More complex solutions might involve tracking actual loading states.
+    // Set a timer to ensure the loader shows for at least MIN_LOADING_TIME
     const timer = setTimeout(() => {
       console.log('RouteChangeListener: Minimum load time elapsed, stopping loading...');
-      stopLoading();
+      stopLoading(); // Hide the loader
     }, MIN_LOADING_TIME);
 
-    // Cleanup timer on component unmount or before next effect run
-    return () => clearTimeout(timer);
+    // Cleanup function: clear the timer if the route changes again
+    // before the minimum time is up, or when the component unmounts.
+    return () => {
+        console.log('RouteChangeListener: Effect cleanup (clearing timer).');
+        clearTimeout(timer);
+    }
+    // ** CORRECTED DEPENDENCIES **
+    // Only depend on pathname and searchParams. startLoading/stopLoading
+    // are stable references thanks to useCallback in the provider.
+  }, [pathname, searchParams]);
 
-    // Depend on pathname and searchParams to re-trigger on navigation
-  }, [pathname, searchParams, startLoading, stopLoading]);
-
-  // This component doesn't render anything itself
+  // This component does not render any UI itself
   return null;
 }
 
-
+/**
+ * Provides loading state and functions to the application.
+ * Manages the display of a page loader during route transitions.
+ */
 export function LoadingProvider({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState(false); // Start loading false by default
+  // State to track if the loader should be visible
+  const [isLoading, setIsLoading] = useState(false); // Start false, loader triggered by RouteChangeListener
+  // State to track when loading started, for minimum display time calculation
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
 
-  // Keep start/stop logic in the main provider
-  const startLoading = React.useCallback(() => {
-    setLoadingStartTime(Date.now());
-    setIsLoading(true);
-  }, []);
+  // Memoized function to start the loading indicator
+  const startLoading = useCallback(() => {
+    console.log('LoadingProvider: startLoading called.');
+    setLoadingStartTime(Date.now()); // Record start time
+    setIsLoading(true); // Show loader
+  }, []); // Empty dependency array: function reference is stable
 
-  const stopLoading = React.useCallback(() => {
+  // Memoized function to stop the loading indicator
+  const stopLoading = useCallback(() => {
     const currentTime = Date.now();
-    // Use optional chaining and default value for safety
-    const startTime = loadingStartTime ?? currentTime;
+    const startTime = loadingStartTime ?? currentTime; // Use current time if start time is null
     const elapsedTime = currentTime - startTime;
+    // Calculate how much longer the loader needs to show (if any)
     const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
 
-    console.log(`Stopping loading. Elapsed: ${elapsedTime}ms, Remaining: ${remainingTime}ms`);
+    console.log(`LoadingProvider: stopLoading called. Elapsed: ${elapsedTime}ms, Remaining: ${remainingTime}ms`);
 
     if (remainingTime > 0) {
+      // If minimum time hasn't passed, wait before hiding
       const timer = setTimeout(() => {
+        console.log('LoadingProvider: Hiding loader after delay.');
         setIsLoading(false);
         setLoadingStartTime(null);
       }, remainingTime);
-      // Optional: Store timer ID if cleanup needed on rapid start/stop
+      // Note: Could store timer ID if complex cleanup on rapid calls is needed
     } else {
+      // If minimum time has passed, hide immediately
+      console.log('LoadingProvider: Hiding loader immediately.');
       setIsLoading(false);
       setLoadingStartTime(null);
     }
-  }, [loadingStartTime]);
+  }, [loadingStartTime]); // Depends only on loadingStartTime
 
-  // Removed the initial useEffect that forced loading on mount
+  // Context value containing state and control functions
+  const contextValue = { isLoading, startLoading, stopLoading };
 
   return (
-    <LoadingContext.Provider value={{ isLoading, startLoading, stopLoading }}>
-      {/* Conditionally render the PageLoader */}
+    <LoadingContext.Provider value={contextValue}>
+      {/* Display the PageLoader overlay when isLoading is true */}
       {isLoading && <PageLoader />}
 
-      {/* Wrap the children and the RouteChangeListener */}
-      {/* Hide children when loading */}
-      <div className={isLoading ? 'hidden' : ''}>
+      {/* Render the actual application content */}
+      {/* Hide children visually when loading to prevent interaction/layout shifts */}
+      {/* Using opacity and pointer-events might be smoother than 'hidden' */}
+      <div className={isLoading ? 'opacity-0 pointer-events-none' : 'opacity-100 transition-opacity duration-300'}>
         {children}
       </div>
 
-      {/* Render the component that uses the hooks inside Suspense */}
-      {/* Fallback can be null as RouteChangeListener doesn't render UI */}
+      {/* Render the RouteChangeListener wrapped in Suspense */}
+      {/* Suspense handles the client-side hooks used within RouteChangeListener */}
       <Suspense fallback={null}>
         <RouteChangeListener />
       </Suspense>
@@ -100,6 +129,9 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Custom hook to easily consume the LoadingContext.
+ */
 export function useLoading() {
   const context = useContext(LoadingContext);
   if (context === undefined) {
