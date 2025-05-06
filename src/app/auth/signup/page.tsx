@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, Sun, Moon, User, Mail, Lock, Eye, EyeOff, Check, X } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -17,6 +18,7 @@ interface PasswordRequirement {
 }
 
 export default function SignUpPage() {
+  const router = useRouter()
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -64,16 +66,20 @@ export default function SignUpPage() {
     await signUp(form.email, form.password, form.fullName)
   }
 
+  const handleBack = () => {
+    router.back()
+  }
+
   return (
     <div className="w-full max-w-sm bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-gray-700 transition-all duration-300 ease-in-out">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <Link 
-          href="/" 
+        <button 
+          onClick={handleBack}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 ease-in-out"
         >
           <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-        </Link>
+        </button>
         <button
           onClick={toggleTheme}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 ease-in-out"
@@ -106,61 +112,67 @@ export default function SignUpPage() {
       <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-8">Start your journey with KoruSync</p>
       
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="relative group">
-          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
-          <Input 
-            id="fullName" 
-            type="text" 
-            placeholder="Full Name" 
-            value={form.fullName} 
-            onChange={handleChange} 
-            required 
-            disabled={loading}
-            className="pl-11"
-            inputSize="lg"
-          />
+        <div className="relative">
+          <div className="flex items-center w-full px-4 py-3">
+            <User className="w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500 flex-shrink-0" />
+            <Input 
+              id="fullName" 
+              type="text" 
+              placeholder="   Full Name" 
+              value={form.fullName} 
+              onChange={handleChange} 
+              required 
+              disabled={loading}
+              className="border-0 bg-transparent focus:ring-0 px-3 flex-1"
+              inputSize="lg"
+            />
+          </div>
         </div>
 
-        <div className="relative group">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="Email Address" 
-            value={form.email} 
-            onChange={handleChange} 
-            required 
-            disabled={loading}
-            className="pl-11"
-            inputSize="lg"
-          />
+        <div className="relative">
+          <div className="flex items-center w-full px-4 py-3">
+            <Mail className="w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500 flex-shrink-0" />
+            <Input 
+              id="email" 
+              type="email" 
+              placeholder="   Email Address" 
+              value={form.email} 
+              onChange={handleChange} 
+              required 
+              disabled={loading}
+              className="border-0 bg-transparent focus:ring-0 px-3 flex-1"
+              inputSize="lg"
+            />
+          </div>
         </div>
 
-        <div className="relative group">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
-          <Input 
-            id="password" 
-            type={showPassword ? "text" : "password"}
-            placeholder="Create Password" 
-            value={form.password} 
-            onChange={handleChange} 
-            error={error || undefined}
-            required 
-            disabled={loading}
-            className="pl-11"
-            inputSize="lg"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
-          >
-            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
+        <div className="relative">
+          <div className="flex items-center w-full px-4 py-3">
+            <Lock className="w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500 flex-shrink-0" />
+            <Input 
+              id="password" 
+              type={showPassword ? "text" : "password"}
+              placeholder="   Create Password" 
+              value={form.password} 
+              onChange={handleChange} 
+              error={error || undefined}
+              required 
+              disabled={loading}
+              className="border-0 bg-transparent focus:ring-0 px-3 flex-1"
+              inputSize="lg"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 flex-shrink-0"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Password Requirements */}
-        <div className="space-y-2 text-sm bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
+        <div className="space-y-2 text-sm bg-gray-50/50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
           {passwordRequirements.map((req, index) => (
             <div key={index} className="flex items-center text-gray-500 dark:text-gray-400">
               {req.met ? (
@@ -173,26 +185,28 @@ export default function SignUpPage() {
           ))}
         </div>
 
-        <div className="relative group">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
-          <Input 
-            id="confirmPassword" 
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm Password" 
-            value={form.confirmPassword} 
-            onChange={handleChange} 
-            required 
-            disabled={loading}
-            className="pl-11"
-            inputSize="lg"
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
-          >
-            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
+        <div className="relative">
+          <div className="flex items-center w-full px-4 py-3">
+            <Lock className="w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500 flex-shrink-0" />
+            <Input 
+              id="confirmPassword" 
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="   Confirm Password" 
+              value={form.confirmPassword} 
+              onChange={handleChange} 
+              required 
+              disabled={loading}
+              className="border-0 bg-transparent focus:ring-0 px-3 flex-1"
+              inputSize="lg"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 flex-shrink-0"
+            >
+              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
