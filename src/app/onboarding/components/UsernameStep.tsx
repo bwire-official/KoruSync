@@ -139,7 +139,7 @@ export function UsernameStep({ initialUsername, onComplete, loading }: UsernameS
             placeholder="Choose a username" 
             value={username} 
             onChange={(e) => setUsername(e.target.value)} 
-            error={error}
+            error={error || undefined}
             required 
             disabled={loading}
             className="pl-12 text-base py-3"

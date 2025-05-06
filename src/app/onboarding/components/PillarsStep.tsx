@@ -203,7 +203,7 @@ export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStep
                 onChange={(e) => setNewPillarName(e.target.value)}
                 className="flex-1"
                 disabled={loading}
-                error={error}
+                error={error || undefined}
               />
               <Button
                 type="button"

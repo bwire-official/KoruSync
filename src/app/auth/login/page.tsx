@@ -83,7 +83,7 @@ export default function LoginPage() {
             required 
             disabled={loading}
             className="pl-11"
-            size="lg"
+            inputSize="lg"
           />
         </div>
 
@@ -99,7 +99,7 @@ export default function LoginPage() {
             required 
             disabled={loading}
             className="pl-11"
-            size="lg"
+            inputSize="lg"
           />
           <button
             type="button"

@@ -205,7 +205,7 @@ export default function ResetPasswordPage() {
                   required 
                   disabled={isLoading}
                   className="pl-11"
-                  size="lg"
+                  inputSize="lg"
                 />
                 <button
                   type="button"
@@ -228,7 +228,7 @@ export default function ResetPasswordPage() {
                   required 
                   disabled={isLoading}
                   className="pl-11"
-                  size="lg"
+                  inputSize="lg"
                 />
                 <button
                   type="button"

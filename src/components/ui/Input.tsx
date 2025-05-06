@@ -1,48 +1,32 @@
 'use client'
 
-import { forwardRef } from 'react'
+import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string
-  size?: 'sm' | 'md' | 'lg'
+  inputSize?: 'sm' | 'md' | 'lg'
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, error, size = 'md', ...props }, ref) => {
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, error, inputSize = 'md', ...props }, ref) => {
     return (
       <div className="relative">
         <input
+          type={type}
           className={cn(
-            // Base styles
-            "w-full bg-transparent text-gray-900 dark:text-white",
-            "border-2 border-gray-200 dark:border-gray-700",
-            "rounded-xl", // Softer edges
-            "transition-all duration-200 ease-in-out",
-            "focus:outline-none focus:ring-2 focus:ring-cyan-500/50 dark:focus:ring-emerald-500/50",
-            "focus:border-cyan-500 dark:focus:border-emerald-500",
-            "placeholder:text-gray-400 dark:placeholder:text-gray-500",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
-            
-            // Size variants
-            size === 'sm' && "px-3 py-1.5 text-xs",
-            size === 'md' && "px-4 py-2.5 text-sm",
-            size === 'lg' && "px-6 py-3 text-base",
-            
-            // Error state
-            error && [
-              "border-red-500 dark:border-red-500",
-              "focus:ring-red-500/50",
-              "focus:border-red-500",
-            ],
-            
+            'flex w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:focus-visible:ring-emerald-400 disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-red-500 dark:border-red-400 focus-visible:ring-red-500 dark:focus-visible:ring-red-400',
+            inputSize === 'sm' && 'h-8 px-3 text-sm',
+            inputSize === 'md' && 'h-10 px-4 text-base',
+            inputSize === 'lg' && 'h-12 px-4 text-lg',
             className
           )}
           ref={ref}
           {...props}
         />
         {error && (
-          <p className="mt-1.5 text-sm text-red-500 dark:text-red-400">{error}</p>
+          <p className="mt-1 text-sm text-red-500 dark:text-red-400">{error}</p>
         )}
       </div>
     )
