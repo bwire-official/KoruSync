@@ -145,7 +145,7 @@ export default function SignUpPage() {
               placeholder="Create Password" 
               value={form.password} 
               onChange={handleChange} 
-              error={error}
+              error={error || undefined}
               required 
               disabled={loading}
               className="pl-10"

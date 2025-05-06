@@ -90,13 +90,13 @@ export default function LoginPage() {
         <div className="relative group">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
           <Input 
-            label="Password" 
+            // label="Password" 
             id="password" 
             type={showPassword ? "text" : "password"}
             placeholder="Enter your password" 
             value={form.password} 
             onChange={handleChange} 
-            error={error}
+            error={error || undefined }
             required 
             disabled={loading}
             className="pl-10"

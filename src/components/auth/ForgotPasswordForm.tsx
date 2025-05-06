@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { AuthLayout } from '@/components/layouts/AuthLayout'
+import  AuthLayout  from '@/components/layouts/AuthLayout'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 
@@ -65,7 +65,7 @@ export function ForgotPasswordForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Email"
+            //label="Email"
             type="email"
             id="email"
             placeholder="Enter your email"

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { AuthLayout } from '@/components/layouts/AuthLayout'
+import  AuthLayout  from '@/components/layouts/AuthLayout'
 import { Button } from '@/components/ui/Button'
 
 export function VerifyEmailPage() {

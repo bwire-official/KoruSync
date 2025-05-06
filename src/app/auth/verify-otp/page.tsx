@@ -138,7 +138,7 @@ export default function VerifyOTPPage() {
               placeholder="Enter 6-digit code" 
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              error={getErrorMessage()}
+              error={getErrorMessage() || undefined}
               required 
               disabled={loading || isVerifying}
               className="pl-10 text-center tracking-widest"

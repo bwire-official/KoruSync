@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { AuthLayout } from '@/components/layouts/AuthLayout'
+import  AuthLayout  from '@/components/layouts/AuthLayout'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { SocialButton } from '@/components/ui/SocialButton'
@@ -81,7 +81,7 @@ export function SignupForm() {
         <p className="text-center text-gray-500 dark:text-gray-400 mb-6">Join us and start your journey</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input 
-            label="Full Name" 
+            // label="Full Name" 
             id="fullName" 
             type="text" 
             placeholder="Enter your full name" 
@@ -91,7 +91,7 @@ export function SignupForm() {
             disabled={loading}
           />
           <Input 
-            label="Email" 
+            // label="Email" 
             id="email" 
             type="email" 
             placeholder="Enter your email" 
@@ -101,19 +101,19 @@ export function SignupForm() {
             disabled={loading}
           />
           <Input 
-            label="Password" 
+            // label="Password" 
             id="password" 
             type="password" 
             placeholder="Create a password" 
             value={form.password} 
             onChange={handleChange} 
-            error={errors.password || error} 
+            error={errors.password || error || undefined} 
             required 
             disabled={loading}
           />
           <PasswordStrengthIndicator password={form.password} />
           <Input 
-            label="Confirm Password" 
+            //label="Confirm Password" 
             id="confirmPassword" 
             type="password" 
             placeholder="Confirm your password" 

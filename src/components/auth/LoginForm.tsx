@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { AuthLayout } from '@/components/layouts/AuthLayout'
+import  AuthLayout  from '@/components/layouts/AuthLayout'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { SocialButton } from '@/components/ui/SocialButton'
@@ -57,7 +57,7 @@ export function LoginForm() {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input 
-            label="Email or Username" 
+            //label="Email or Username" 
             id="email" 
             type="text" 
             placeholder="you@example.com or your_username" 
@@ -67,13 +67,13 @@ export function LoginForm() {
             disabled={loading}
           />
           <Input 
-            label="Password" 
+            //label="Password" 
             id="password" 
             type="password" 
             placeholder="Enter your password" 
             value={form.password} 
             onChange={handleChange} 
-            error={error}
+            error={error || undefined}
             required 
             disabled={loading}
           />

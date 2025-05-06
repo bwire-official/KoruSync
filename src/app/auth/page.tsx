@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { AuthLayout } from '@/components/layouts/AuthLayout'
+import  AuthLayout  from '@/components/layouts/AuthLayout'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { SocialButton } from '@/components/ui/SocialButton'
@@ -70,8 +70,10 @@ export default function AuthPage() {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
+
+            //i removed the label tag because it was cauing issue 
             <Input 
-              label="Full Name" 
+              
               id="fullName" 
               type="text" 
               placeholder="Enter your full name" 
@@ -82,7 +84,7 @@ export default function AuthPage() {
             />
           )}
           <Input 
-            label="Email" 
+          
             id="email" 
             type="email" 
             placeholder="Enter your email" 
@@ -92,19 +94,23 @@ export default function AuthPage() {
             disabled={loading}
           />
           <Input 
-            label="Password" 
+
             id="password" 
             type="password" 
             placeholder={mode === 'signup' ? "Create a password" : "Enter your password"} 
             value={form.password} 
             onChange={handleChange} 
-            error={error}
+            error={error || undefined}
             required 
             disabled={loading}
           />
+
+          //hehe opueh lol...I enjoyed writing this code 
+
+
           {mode === 'signup' && (
             <Input 
-              label="Confirm Password" 
+               
               id="confirmPassword" 
               type="password" 
               placeholder="Confirm your password" 

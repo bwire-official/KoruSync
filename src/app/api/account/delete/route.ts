@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { Database } from '@/types/database'
+type TableName = keyof Database['public']['Tables'];
 
 export async function POST() {
   try {
@@ -37,7 +38,7 @@ export async function POST() {
     ]
 
     for (const table of tables) {
-      let query = supabase.from(table)
+      let query = supabase.from(table as TableName)
 
       if (table === 'task_categories') {
         // Special handling for task_categories

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { AuthLayout } from '@/components/layouts/AuthLayout'
+import  AuthLayout  from '@/components/layouts/AuthLayout'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { PasswordStrengthIndicator } from '@/components/ui/PasswordStrengthIndicator'
@@ -84,7 +84,7 @@ export function ResetPasswordForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="New Password"
+            //label="New Password"
             type="password"
             id="password"
             placeholder="Enter your new password"
@@ -97,7 +97,7 @@ export function ResetPasswordForm() {
           <PasswordStrengthIndicator password={formData.password} />
 
           <Input
-            label="Confirm New Password"
+            //label="Confirm New Password"
             type="password"
             id="confirmPassword"
             placeholder="Confirm your new password"

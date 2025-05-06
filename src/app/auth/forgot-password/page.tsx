@@ -105,7 +105,7 @@ export default function ForgotPasswordPage() {
                 placeholder="Enter your email" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
-                error={errorMessage}
+                error={errorMessage || undefined}
                 required 
                 disabled={isLoading}
                 className="pl-10"
