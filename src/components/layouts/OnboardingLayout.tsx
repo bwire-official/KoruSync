@@ -11,15 +11,15 @@ export function OnboardingLayout({ children, step, totalSteps }: OnboardingLayou
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 font-inter">
       {/* Logo */}
-      <div className="mb-6">
-        <Image src="/logo.svg" alt="KoruSync Logo" width={56} height={56} priority />
+      <div className="mb-4">
+        <Image src="/logo.svg" alt="KoruSync Logo" width={48} height={48} priority />
       </div>
       {/* Progress Indicator */}
-      <div className="mb-4 text-sm text-gray-500 dark:text-gray-400 font-medium">
+      <div className="mb-3 text-sm text-gray-500 dark:text-gray-400 font-medium">
         Step {step} of {totalSteps}
       </div>
       {/* Card */}
-      <div className="w-full max-w-md bg-white/95 dark:bg-gray-800/95 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700">
+      <div className="w-full max-w-sm bg-white/95 dark:bg-gray-800/95 rounded-xl shadow-lg p-6">
         {children}
       </div>
     </div>

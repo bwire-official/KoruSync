@@ -304,11 +304,11 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-inter">
       <div className="flex-1 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-sm">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 space-y-6 relative overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 space-y-4 relative overflow-hidden"
           >
             {/* Loading Overlay */}
             <AnimatePresence>
@@ -317,7 +317,7 @@ export default function OnboardingPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10"
+                  className="absolute inset-0 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl flex items-center justify-center z-10"
                 >
                   <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
                 </motion.div>
@@ -338,7 +338,7 @@ export default function OnboardingPage() {
                   <ChevronLeft className="w-5 h-5" />
                 </Button>
               ) : (
-                 <div className="w-9 h-9"></div> // Placeholder for alignment
+                <div className="w-9 h-9"></div> // Placeholder for alignment
               )}
               {/* Progress Indicator */}
               <div className="flex justify-center gap-2">
@@ -369,8 +369,7 @@ export default function OnboardingPage() {
               </button>
             </div>
 
-            {/* Display overall error message if exists */}
-            {/* *** ENSURE Alert components are imported correctly *** */}
+            {/* Error Alert */}
             <AnimatePresence>
               {error && (
                 <motion.div
@@ -387,7 +386,7 @@ export default function OnboardingPage() {
             </AnimatePresence>
 
             {/* Step Content */}
-            <div className="mt-4 min-h-[300px]">
+            <div className="mt-2 min-h-[250px]">
               <AnimatePresence mode="wait">
                 {renderStep()}
               </AnimatePresence>

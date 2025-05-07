@@ -34,20 +34,39 @@ export function useAuth() {
     }
   }, [supabaseClient.auth])
 
-  const signIn = useCallback(async (provider: 'google' | 'twitter' | 'apple') => {
-    try {
+  const signIn = useCallback(
+    async (provider: 'google' | 'email', email?: string, password?: string) => {
+      if (provider === 'email') {
+        if (!email || !password) {
+          throw new Error('Email and password are required')
+        }
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+        if (!data.user?.email_confirmed_at) {
+          router.push('/auth/verify-email')
+          return
+        }
+        router.push('/dashboard')
+        return
+      }
+
       const { error } = await supabaseClient.auth.signInWithOAuth({
-        provider,
+        provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       })
       if (error) throw error
-    } catch (error) {
-      console.error('Error signing in:', error)
-      throw error
-    }
-  }, [supabaseClient.auth])
+    },
+    [router, supabaseClient.auth]
+  )
 
   const signInWithEmail = useCallback(async (identifier: string, password: string) => {
     try {

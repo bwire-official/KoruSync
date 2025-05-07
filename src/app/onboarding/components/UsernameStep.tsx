@@ -94,20 +94,20 @@ export function UsernameStep({ initialUsername, onComplete, loading }: UsernameS
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="space-y-8"
+      className="space-y-6"
     >
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.2 }}
         className="flex justify-center"
       >
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
-          <User className="w-10 h-10 text-white" />
+        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
+          <User className="w-8 h-8 text-white" />
         </div>
       </motion.div>
 
@@ -117,15 +117,15 @@ export function UsernameStep({ initialUsername, onComplete, loading }: UsernameS
         transition={{ delay: 0.4 }}
         className="text-center"
       >
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
           Choose Your Username
         </h2>
-        <p className="text-base text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           This will be your unique identifier on KoruSync
         </p>
       </motion.div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -133,11 +133,11 @@ export function UsernameStep({ initialUsername, onComplete, loading }: UsernameS
           className="relative group"
         >
           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
-          <Input 
+          <Input
             id="username" 
-            type="text" 
+            type="text"
             placeholder="Choose a username" 
-            value={username} 
+            value={username}
             onChange={(e) => setUsername(e.target.value)} 
             error={error || undefined}
             required 
@@ -203,21 +203,15 @@ export function UsernameStep({ initialUsername, onComplete, loading }: UsernameS
           )}
         </AnimatePresence>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+        <Button
+          type="submit"
+          isLoading={loading}
+          disabled={loading || !username.trim() || !isAvailable}
+          className="w-full mt-4 py-2.5 text-sm font-medium"
+          variant="primary"
         >
-          <Button 
-            type="submit" 
-            fullWidth 
-            isLoading={loading} 
-            disabled={loading || !username.trim() || !isAvailable} 
-            className="mt-6 py-3 text-base font-medium"
-          >
-            Continue
-          </Button>
-        </motion.div>
+          Continue
+        </Button>
       </form>
     </motion.div>
   )

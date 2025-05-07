@@ -1,24 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { Plus, X, Layers, Sparkles } from 'lucide-react';
-import { Input } from '@/components/ui/Input'; // Verify path
-import { Button } from '@/components/ui/Button'; // Verify path
-import { Label } from '@/components/ui/label'; // Assuming Label is needed/available
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react'
+import { Plus, X, Layers, Sparkles } from 'lucide-react'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+import { Label } from '@/components/ui/label'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // Define the structure for a pillar object
 interface Pillar {
-  name: string;
-  color: string; // Store color as hex string, e.g., '#10B981'
+  name: string
+  color: string // Store color as hex string, e.g., '#10B981'
 }
 
 // Define the props interface with the correct pillar type
 interface PillarsStepProps {
-  initialPillars: Pillar[]; // Expects array of Pillar objects
-  // Update onComplete to expect the correct structure
-  onComplete: (data: { pillars: Pillar[] }) => void;
-  loading: boolean;
+  initialPillars: Pillar[] // Expects array of Pillar objects
+  onComplete: (data: { pillars: Pillar[] }) => void
+  loading: boolean
 }
 
 // Default colors to cycle through for new pillars
@@ -33,7 +32,7 @@ const DEFAULT_COLORS = [
   '#F472B6', // Pink
   '#818CF8', // Indigo
   '#4ADE80', // Green
-];
+]
 
 // Preset pillar names (only names)
 const PRESET_PILLAR_NAMES = [
@@ -52,69 +51,69 @@ const PRESET_PILLAR_NAMES = [
   'Travel',
   'Home & Living',
   'Wellness & Self-Care'
-];
+]
 
 export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStepProps) {
   // State now holds an array of Pillar objects
-  const [pillars, setPillars] = useState<Pillar[]>([]);
-  const [newPillarName, setNewPillarName] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [pillars, setPillars] = useState<Pillar[]>([])
+  const [newPillarName, setNewPillarName] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   // Initialize state with initialPillars only once
   useEffect(() => {
-    setPillars(initialPillars || []);
-  }, [initialPillars]); // Depend only on initialPillars
+    setPillars(initialPillars || [])
+  }, [initialPillars]) // Depend only on initialPillars
 
   // Helper to get the next default color
   const getNextColor = () => {
-    return DEFAULT_COLORS[pillars.length % DEFAULT_COLORS.length];
-  };
+    return DEFAULT_COLORS[pillars.length % DEFAULT_COLORS.length]
+  }
 
   // Check if a pillar name already exists
   const pillarExists = (name: string) => {
-    return pillars.some(p => p.name.toLowerCase() === name.toLowerCase());
-  };
+    return pillars.some(p => p.name.toLowerCase() === name.toLowerCase())
+  }
 
   const handleAddPillar = (nameToAdd: string) => {
-    const trimmedName = nameToAdd.trim();
+    const trimmedName = nameToAdd.trim()
     if (trimmedName && !pillarExists(trimmedName)) {
       const newPillar: Pillar = {
         name: trimmedName,
         color: getNextColor(),
-      };
-      setPillars([...pillars, newPillar]);
-      setNewPillarName('');
-      setError(null);
+      }
+      setPillars([...pillars, newPillar])
+      setNewPillarName('')
+      setError(null)
     } else if (pillarExists(trimmedName)) {
-      setError('This pillar already exists');
+      setError('This pillar already exists')
     }
-  };
+  }
 
   const handleRemovePillar = (pillarToRemove: Pillar) => {
-    setPillars(pillars.filter(pillar => pillar.name !== pillarToRemove.name));
-    setError(null);
-  };
+    setPillars(pillars.filter(pillar => pillar.name !== pillarToRemove.name))
+    setError(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (loading || pillars.length === 0) {
-      setError('Please select at least one pillar');
-      return;
+      setError('Please select at least one pillar')
+      return
     }
     try {
-      onComplete({ pillars });
+      onComplete({ pillars })
     } catch (error) {
-      console.error('Error saving pillars:', error);
-      setError('Failed to save pillars. Please try again.');
+      console.error('Error saving pillars:', error)
+      setError('Failed to save pillars. Please try again.')
     }
-  };
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="space-y-8"
+      className="space-y-6"
     >
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -122,8 +121,8 @@ export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStep
         transition={{ delay: 0.2 }}
         className="flex justify-center"
       >
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
-          <Layers className="w-10 h-10 text-white" />
+        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
+          <Layers className="w-8 h-8 text-white" />
         </div>
       </motion.div>
 
@@ -133,20 +132,20 @@ export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStep
         transition={{ delay: 0.4 }}
         className="text-center"
       >
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
           Define Your Life Pillars
         </h2>
-        <p className="text-base text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Select or add the key areas you want to balance and track
         </p>
       </motion.div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="space-y-6"
+          className="space-y-4"
         >
           {/* Preset Pillars Section */}
           <div className="space-y-3">
@@ -158,7 +157,7 @@ export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStep
             </div>
             <div className="flex flex-wrap gap-2">
               {PRESET_PILLAR_NAMES.map((name, index) => {
-                const isSelected = pillarExists(name);
+                const isSelected = pillarExists(name)
                 return (
                   <motion.button
                     key={name}
@@ -168,23 +167,23 @@ export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStep
                     type="button"
                     onClick={() => {
                       if (!isSelected) {
-                        handleAddPillar(name);
+                        handleAddPillar(name)
                       } else {
-                        const pillarToRemove = pillars.find(p => p.name === name);
+                        const pillarToRemove = pillars.find(p => p.name === name)
                         if (pillarToRemove) {
-                          handleRemovePillar(pillarToRemove);
+                          handleRemovePillar(pillarToRemove)
                         }
                       }
                     }}
-                    className={`px-4 py-2 text-sm rounded-xl transition-all duration-200 border ${
+                    className={`px-4 py-2 text-sm rounded-xl transition-all duration-200 ${
                       isSelected
                         ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white border-transparent shadow-md'
-                        : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-sm hover:shadow-md'
+                        : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-sm hover:shadow-md'
                     }`}
                   >
                     {name} {isSelected ? <X className="inline w-3 h-3 ml-1" /> : <Plus className="inline w-3 h-3 ml-1" />}
                   </motion.button>
-                );
+                )
               })}
             </div>
           </div>
@@ -272,22 +271,16 @@ export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStep
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+        <Button
+          type="submit"
+          isLoading={loading}
+          disabled={loading || pillars.length === 0}
+          className="w-full mt-4 py-2.5 text-sm font-medium"
+          variant="primary"
         >
-          <Button
-            type="submit"
-            isLoading={loading}
-            disabled={loading || pillars.length === 0}
-            className="w-full mt-6 py-3 text-base font-medium"
-            variant="primary"
-          >
-            Continue
-          </Button>
-        </motion.div>
+          Continue
+        </Button>
       </form>
     </motion.div>
-  );
+  )
 }
