@@ -1,152 +1,157 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import  AuthLayout  from '@/components/layouts/AuthLayout'
-import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { SocialButton } from '@/components/ui/SocialButton'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Label } from '@/components/ui/label'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 
-type AuthMode = 'signup' | 'login'
-
 export default function AuthPage() {
-  const [mode, setMode] = useState<AuthMode>('signup')
-  const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  })
-  const { loading, error, signUp, signIn, signInWithEmail } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+  const { signIn } = useAuth()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (loading) return // Prevent changes while loading
-    setForm({ ...form, [e.target.id]: e.target.value })
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (loading) return
+    setLoading(true)
+    setError(null)
 
-    if (mode === 'signup') {
-      // Validate passwords match
-      if (form.password !== form.confirmPassword) {
-        // TODO: Show error message
-        return
-      }
-      await signUp(form.email, form.password, form.fullName)
-    } else {
-      await signInWithEmail(form.email, form.password)
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) throw error
+
+      router.push('/dashboard')
+    } catch (error: any) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const toggleMode = () => {
-    setMode(mode === 'signup' ? 'login' : 'signup')
-    // Reset form
-    setForm({
-      fullName: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    })
+  const handleSocialSignIn = async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) throw error
+    } catch (error: any) {
+      setError(error.message)
+      setLoading(false)
+    }
   }
 
   return (
-    <AuthLayout>
-      <div className="w-full max-w-md bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700">
-        {/* Card Header */}
-        <div className="flex flex-col items-center mb-8">
-          <Image src="/logo.svg" alt="KoruSync Logo" width={40} height={40} className="mb-1" />
-          <span className="text-xl font-bold text-cyan-600 dark:text-emerald-400 font-inter">KoruSync</span>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md w-full space-y-8"
+      >
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+            Welcome to KoruSync
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+            Sign in to manage your life pillars
+          </p>
         </div>
 
-        <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2">
-          {mode === 'signup' ? 'Create your account' : 'Welcome back'}
-        </h2>
-        <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
-          {mode === 'signup' ? 'Start your journey with KoruSync' : 'Log in to your account'}
-        </p>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'signup' && (
+        <form className="mt-8 space-y-6" onSubmit={handleEmailSignIn}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <Label htmlFor="email" className="sr-only">
+                Email address
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email address"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-t-md focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="password" className="sr-only">
+                Password
+              </Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-b-md focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm"
+              />
+            </div>
+          </div>
 
-            //i removed the label tag because it was cauing issue 
-            <Input 
-              
-              id="fullName" 
-              type="text" 
-              placeholder="Enter your full name" 
-              value={form.fullName} 
-              onChange={handleChange} 
-              required 
-              disabled={loading}
-            />
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
           )}
-          <Input 
-          
-            id="email" 
-            type="email" 
-            placeholder="Enter your email" 
-            value={form.email} 
-            onChange={handleChange} 
-            required 
-            disabled={loading}
-          />
-          <Input 
 
-            id="password" 
-            type="password" 
-            placeholder={mode === 'signup' ? "Create a password" : "Enter your password"} 
-            value={form.password} 
-            onChange={handleChange} 
-            error={error || undefined}
-            required 
-            disabled={loading}
-          />
-
-          //hehe opueh lol...I enjoyed writing this code 
-
-
-          {mode === 'signup' && (
-            <Input 
-               
-              id="confirmPassword" 
-              type="password" 
-              placeholder="Confirm your password" 
-              value={form.confirmPassword} 
-              onChange={handleChange} 
-              required 
+          <div>
+            <Button
+              type="submit"
+              isLoading={loading}
               disabled={loading}
-            />
-          )}
-          <Button type="submit" fullWidth isLoading={loading} disabled={loading}>
-            {mode === 'signup' ? 'Create Account' : 'Log in'}
-          </Button>
+              className="w-full"
+              variant="primary"
+            >
+              Sign in
+            </Button>
+          </div>
         </form>
 
-        <div className="flex items-center my-6">
-          <div className="flex-grow border-t border-gray-200 dark:border-gray-700" />
-          <span className="mx-3 text-xs text-gray-400">or continue with</span>
-          <div className="flex-grow border-t border-gray-200 dark:border-gray-700" />
-        </div>
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-700" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                Or continue with
+              </span>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <SocialButton provider="google" disabled={loading} onClick={() => signIn('google')}>Google</SocialButton>
-          <SocialButton provider="twitter" disabled={loading} onClick={() => signIn('twitter')}>X</SocialButton>
-          <SocialButton provider="apple" disabled={loading} onClick={() => signIn('apple')}>Apple</SocialButton>
+          <div className="mt-6">
+            <SocialButton
+              provider="google"
+              disabled={loading}
+              onClick={handleSocialSignIn}
+              className="w-full"
+            >
+              Google
+            </SocialButton>
+          </div>
         </div>
-
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-          {mode === 'signup' ? 'Already have an account?' : "Don't have an account?"}{' '}
-          <button
-            onClick={toggleMode}
-            className="text-cyan-600 dark:text-cyan-400 hover:underline"
-          >
-            {mode === 'signup' ? 'Log in' : 'Sign up'}
-          </button>
-        </p>
-      </div>
-    </AuthLayout>
+      </motion.div>
+    </div>
   )
 } 

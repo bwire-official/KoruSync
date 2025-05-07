@@ -32,19 +32,16 @@ type SignUpFormData = z.infer<typeof signUpSchema>
 export function SignupForm() {
   const [loading, setLoading] = useState(false)
   const { signUp, signIn } = useAuth()
-  const { register, handleSubmit, formState: { errors } } = useForm<SignUpFormData>({
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema)
   })
   const { theme, toggleTheme } = useTheme()
+  const password = watch('password')
 
   const onSubmit = async (data: SignUpFormData) => {
     try {
       setLoading(true)
-      await signUp(data.email, data.password, {
-        data: {
-          full_name: data.fullName
-        }
-      })
+      await signUp(data.email, data.password, data.fullName)
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -152,7 +149,7 @@ export function SignupForm() {
             </div>
           </div>
 
-          <PasswordRequirements />
+          <PasswordRequirements password={password} />
 
           <button
             type="submit"
