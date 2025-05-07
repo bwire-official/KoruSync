@@ -1,6 +1,6 @@
-'use client'
+ 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { LogOut, Sun, Moon, Trash2, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/database'
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter()
   const { user, signOut } = useAuth()
   const { theme, toggleTheme } = useTheme()
@@ -170,5 +170,22 @@ export default function DashboardPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 animate-pulse">
+            <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+            <div className="h-4 w-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 } 

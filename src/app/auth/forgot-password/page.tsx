@@ -126,6 +126,7 @@ export default function ForgotPasswordPage() {
               type="submit" 
               fullWidth 
               isLoading={isLoading} 
+              loadingText='Sending Link...'
               disabled={isLoading} 
               size="lg"
               className="mt-6"

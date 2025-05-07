@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
 import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const [form, setForm] = useState({
     email: '',
@@ -143,6 +143,7 @@ export default function LoginPage() {
           type="submit" 
           fullWidth 
           isLoading={loading} 
+          loadingText='Signing in...'
           disabled={loading} 
           size="lg"
           className="mt-6"
@@ -186,5 +187,19 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full max-w-sm bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-gray-700 transition-all duration-300 ease-in-out">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 } 

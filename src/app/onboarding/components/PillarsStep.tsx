@@ -274,8 +274,9 @@ export function PillarsStep({ initialPillars, onComplete, loading }: PillarsStep
         <Button
           type="submit"
           isLoading={loading}
+          loadingText="Saving Pillars..."
           disabled={loading || pillars.length === 0}
-          className="w-full mt-4 py-2.5 text-sm font-medium"
+          className="w-full mt-4 py-2.5 text-sm font-medium bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
           variant="primary"
         >
           Continue

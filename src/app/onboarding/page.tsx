@@ -6,7 +6,7 @@ import Link from 'next/link'; // Keep Link if used elsewhere, otherwise remove i
 import Image from 'next/image'; // Keep Image if used elsewhere, otherwise remove if unused
 import { ChevronLeft, Sun, Moon, User, Clock, Layers, CheckCircle, Loader2, AlertCircle } from 'lucide-react'; // Added Loader2, AlertCircle
 import { Button } from '@/components/ui/Button'; // Ensure path is correct
-import { UsernameStep } from './components/UsernameStep'; // Ensure path is correct
+import UsernameStep from './components/UsernameStep'; // Changed to default import
 import { TimezoneStep } from './components/TimezoneStep'; // Ensure path is correct
 import { PillarsStep } from './components/PillarsStep'; // Ensure path is correct
 import { IntroStep } from './components/IntroStep'; // Ensure path is correct
@@ -47,12 +47,14 @@ export default function OnboardingPage() {
   });
   // State for displaying errors
   const [error, setError] = useState<string | null>(null);
+  // State for user's full name
+  const [fullName, setFullName] = useState<string>('');
 
   const router = useRouter();
   const supabase = createClientComponentClient<Database>(); // Typed client
   const { theme, toggleTheme } = useTheme(); // Assuming useTheme provides theme state and toggle function
 
-  // Check authentication status on mount
+  // Check authentication status and fetch user data on mount
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -60,12 +62,28 @@ export default function OnboardingPage() {
         // If no session, redirect to login (middleware should ideally handle this too)
         console.log('Onboarding: No session found, redirecting to login.');
         router.push('/auth/login');
+        return;
       }
-      // Optionally fetch user data here if needed for pre-filling steps
+
+      // Fetch user's full name from the users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('full_name')
+        .eq('id', session.user.id)
+        .single();
+
+      if (userError) {
+        console.error('Error fetching user data:', userError);
+        return;
+      }
+
+      if (userData?.full_name) {
+        setFullName(userData.full_name);
+      }
     };
     checkAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
+  }, []);
 
   // Function to handle moving to the next step
   const handleNextStep = async (data: Partial<OnboardingStepData>) => {
@@ -268,6 +286,7 @@ export default function OnboardingPage() {
             initialUsername={stepData.username}
             onComplete={(data) => handleNextStep(data)}
             loading={loading}
+            fullName={fullName}
           />
         );
       case 'timezone':

@@ -149,10 +149,7 @@ export function useAuth() {
       setLoading(true)
       setError(null)
 
-      // Store email for verification
-      localStorage.setItem('verificationEmail', email)
-
-      // Use standard Supabase auth signup
+      // Attempt signup
       const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
@@ -165,10 +162,22 @@ export function useAuth() {
       })
 
       if (error) {
-        throw error
+        if (error.message.includes('User already registered')) {
+          setError('This email is already registered. Please log in instead.')
+        } else {
+          throw error
+        }
+        return
       }
 
-      // Redirect to verification page
+      // Check if the user was actually created and has identities
+      if (!data.user || !data.user.identities || data.user.identities.length === 0) {
+        setError('This email is already registered with a different sign-in method. Please use the original sign-in method or contact support.')
+        return
+      }
+
+      // Only proceed if we have a valid user with identities
+      localStorage.setItem('verificationEmail', email)
       router.push('/auth/verify-otp')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during signup')

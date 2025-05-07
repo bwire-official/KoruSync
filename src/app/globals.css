@@ -55,4 +55,21 @@
   .card {
     @apply bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200;
   }
+}
+
+/* NProgress Customization */
+#nprogress .bar {
+  background: #10B981 !important; /* KoruSync Primary Green */
+  height: 3px !important; /* Adjust height if desired */
+  z-index: 9999 !important; /* Ensure it's on top */
+}
+
+#nprogress .peg {
+  /* Make the peg shadow match the bar color */
+  box-shadow: 0 0 10px #10B981, 0 0 5px #10B981 !important;
+}
+
+#nprogress .spinner {
+  /* Hide the default circular spinner */
+  display: none !important;
 } 

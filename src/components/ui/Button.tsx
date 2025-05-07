@@ -1,18 +1,19 @@
 'use client'
 
 import { forwardRef } from 'react'
-import { Loader } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ButtonLoader } from './Loaders/ButtonLoader'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean
+  loadingText?: string
   fullWidth?: boolean
   variant?: 'primary' | 'secondary' | 'outline' | 'danger'
   size?: 'sm' | 'md' | 'lg'
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, children, isLoading, fullWidth, variant = 'primary', size = 'md', ...props }, ref) => {
+  ({ className, children, isLoading, loadingText, fullWidth, variant = 'primary', size = 'md', ...props }, ref) => {
     return (
       <button
         className={cn(
@@ -65,10 +66,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isLoading || props.disabled}
         {...props}
       >
-        {isLoading && (
-          <Loader className="mr-2 h-4 w-4 animate-spin" />
+        {isLoading ? (
+          <>
+            <ButtonLoader />
+            <span className="ml-2">{loadingText || 'Loading...'}</span>
+          </>
+        ) : (
+          children
         )}
-        {children}
       </button>
     )
   }

@@ -235,6 +235,7 @@ export default function VerifyOTPPage() {
                             type="submit"
                             className="w-full"
                             isLoading={isVerifying} // Show loading only for verify action
+                            loadingText='Verifying...'
                             disabled={loading || otp.length !== 6} // Disable if loading or OTP length wrong
                         >
                             Verify Code

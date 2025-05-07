@@ -152,14 +152,18 @@ export default function VerifyOTPPage() {
             <button
               type="button"
               onClick={handleResend}
+            
               disabled={!canResend || loading || isVerifying}
+              
               className={`text-sm ${
                 canResend 
                   ? 'text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300' 
                   : 'text-gray-400 dark:text-gray-500'
               }`}
             >
+              
               {canResend ? 'Resend code' : `Resend in ${resendCooldown}s`}
+              
             </button>
           </div>
 
@@ -167,10 +171,12 @@ export default function VerifyOTPPage() {
             type="submit" 
             fullWidth 
             isLoading={loading || isVerifying}
+            loadingText='Verifying...'
             disabled={loading || isVerifying || otp.length !== 6}
             className="mt-6"
           >
             {isVerifying ? 'Verifying...' : 'Verify Email'}
+          
           </Button>
         </form>
       </div>

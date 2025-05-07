@@ -2,10 +2,11 @@ import './globals.css' // Ensure this imports Tailwind base styles etc.
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'; // Import the Next.js Script component
+import { Suspense } from 'react' // Add Suspense import
 import { AuthProvider } from '@/contexts/AuthContext' 
 import { ThemeProvider as NextThemesProvider } from 'next-themes' // Import and alias next-themes
 import { ThemeProvider as CustomThemeProvider } from '@/contexts/ThemeContext' // Your custom theme provider (verify path)
-import { LoadingProvider } from '@/components/providers/LoadingProvider' // Verify path
+import { PageProgressBar } from '@/components/common/PageProgressBar'
 
 // Setup the Inter font
 const inter = Inter({ subsets: ['latin'] })
@@ -61,6 +62,9 @@ export default function RootLayout({
         )}
         {/* End Google Analytics Scripts */}
 
+        {/* Render PageProgressBar early */}
+        <PageProgressBar />
+
         {/* Theme Provider from next-themes (handles adding 'dark' class) */}
         <NextThemesProvider
           attribute="class" // Tells it to modify the class attribute (for Tailwind)
@@ -70,12 +74,12 @@ export default function RootLayout({
         >
           {/* Your Custom Context Providers nested inside */}
           <CustomThemeProvider> {/* Your provider for custom theme values/toggle function */}
-            <LoadingProvider> {/* Your provider for page loading state */}
-              <AuthProvider> {/* Your provider for authentication state */}
-                {/* The actual page content */}
+            <AuthProvider> {/* Your provider for authentication state */}
+              {/* Wrap children in Suspense boundary */}
+              <Suspense fallback={<div>Loading...</div>}>
                 {children}
-              </AuthProvider>
-            </LoadingProvider>
+              </Suspense>
+            </AuthProvider>
           </CustomThemeProvider>
         </NextThemesProvider>
       </body>

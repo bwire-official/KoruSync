@@ -106,8 +106,9 @@ export function IntroStep({ onComplete, loading }: IntroStepProps) {
           type="submit"
           onClick={handleSubmit}
           isLoading={loading}
+          loadingText="Getting Started..."
           disabled={loading}
-          className="w-full mt-6 py-3 text-base font-medium"
+          className="w-full mt-6 py-3 text-base font-medium bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
           variant="primary"
         >
           Get Started

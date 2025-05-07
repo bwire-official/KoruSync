@@ -1,95 +1,161 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Check, X, Sparkles } from 'lucide-react'
-import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { InlineSpinner } from '@/components/ui/Loaders/InlineSpinner'
+import { Check, X, User, Sparkles } from 'lucide-react'
+import { useOnboardingStore } from '@/store/onboardingStore'
+import { debounce } from 'lodash'
+import { motion } from 'framer-motion'
+
+type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid_format' | 'too_short' | 'api_error'
 
 interface UsernameStepProps {
   initialUsername: string
   onComplete: (data: { username: string }) => void
   loading: boolean
+  fullName?: string
 }
 
-export function UsernameStep({ initialUsername, onComplete, loading }: UsernameStepProps) {
-  const [username, setUsername] = useState(initialUsername)
-  const [suggestedUsernames, setSuggestedUsernames] = useState<string[]>([])
-  const [isChecking, setIsChecking] = useState(false)
-  const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
-  const [error, setError] = useState<string | null>(null)
+export default function UsernameStep({ initialUsername, onComplete, loading, fullName }: UsernameStepProps) {
+  const router = useRouter()
   const supabase = createClientComponentClient()
+  const { setUsername } = useOnboardingStore()
+  const [username, setUsernameState] = useState(initialUsername)
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle')
+  const [usernameError, setUsernameError] = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [isCheckingSuggestions, setIsCheckingSuggestions] = useState(false)
 
-  // Generate username suggestions based on user's full name
-  useEffect(() => {
-    const generateSuggestions = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user?.user_metadata?.full_name) {
-        const fullName = user.user_metadata.full_name.toLowerCase()
-        const names = fullName.split(' ')
-        const suggestions = [
-          names[0], // First name
-          names[names.length - 1], // Last name
-          `${names[0]}${names[names.length - 1]}`, // First + Last
-          `${names[0][0]}${names[names.length - 1]}`, // First initial + Last
-          `${names[0]}${Math.floor(Math.random() * 1000)}`, // First name + random number
-          `${names[0][0]}${names[names.length - 1]}${Math.floor(Math.random() * 1000)}` // Initials + random number
-        ]
-        // Ensure unique suggestions
-        setSuggestedUsernames([...new Set(suggestions)])
-      }
+  // Generate username suggestions based on full name
+  const generateSuggestions = (name: string) => {
+    if (!name) return []
+    
+    const nameParts = name.toLowerCase().split(' ')
+    const suggestions = [
+      nameParts[0], // First name
+      nameParts[0] + nameParts[1]?.charAt(0), // First name + first letter of last name
+      nameParts[0] + Math.floor(Math.random() * 1000), // First name + random number
+      nameParts[0] + '_' + nameParts[1]?.charAt(0), // First name + underscore + first letter of last name
+    ].filter(Boolean) // Remove any undefined values
+    
+    return suggestions
+  }
+
+  // Check if a username is available
+  const checkUsernameAvailability = debounce(async (username: string) => {
+    if (!username.trim()) {
+      setUsernameStatus('idle')
+      setUsernameError(null)
+      return
     }
-    generateSuggestions()
-  }, [])
 
-  // Check username availability in real-time
-  useEffect(() => {
-    const checkUsername = async () => {
-      if (!username.trim()) {
-        setIsAvailable(null)
-        setError(null)
-        return
+    // Client-side validation
+    if (username.length < 3) {
+      setUsernameStatus('too_short')
+      setUsernameError('Username must be at least 3 characters')
+      return
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setUsernameStatus('invalid_format')
+      setUsernameError('Username can only contain letters, numbers, and underscores')
+      return
+    }
+
+    setUsernameStatus('checking')
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('username')
+        .ilike('username', username.toLowerCase())
+        .maybeSingle()
+
+      if (error) {
+        console.error('Supabase error:', error)
+        throw new Error(error.message)
       }
 
-      // Validate username format
-      const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
-      if (!usernameRegex.test(username.trim())) {
-        setError('Username must be 3-20 characters long and contain only letters, numbers, and underscores')
-        setIsAvailable(false)
-        return
+      if (data) {
+        setUsernameStatus('taken')
+        setUsernameError('This username is already taken')
+      } else {
+        setUsernameStatus('available')
+        setUsernameError(null)
       }
+    } catch (error) {
+      console.error('Error checking username:', error instanceof Error ? error.message : 'Unknown error')
+      setUsernameStatus('api_error')
+      setUsernameError('Could not check username. Please try again.')
+    }
+  }, 500)
 
-      setIsChecking(true)
-      setError(null)
+  // Check availability of suggested usernames
+  const checkSuggestionsAvailability = async (suggestions: string[]) => {
+    setIsCheckingSuggestions(true)
+    const availableSuggestions: string[] = []
+
+    for (const suggestion of suggestions) {
       try {
         const { data, error } = await supabase
-          .rpc('check_username_availability', { username_to_check: username.trim() })
+          .from('users')
+          .select('username')
+          .ilike('username', suggestion.toLowerCase())
+          .maybeSingle()
 
-        if (error) throw error
-        // The function returns TRUE if username exists (taken), FALSE otherwise
-        setIsAvailable(!data)
-      } catch (err) {
-        setIsAvailable(null)
-        setError('Error checking username availability')
-      } finally {
-        setIsChecking(false)
+        if (!error && !data) {
+          availableSuggestions.push(suggestion)
+        }
+      } catch (error) {
+        console.error('Error checking suggestion:', error)
       }
     }
 
-    const debounceTimer = setTimeout(checkUsername, 500)
-    return () => clearTimeout(debounceTimer)
+    setSuggestions(availableSuggestions)
+    setIsCheckingSuggestions(false)
+  }
+
+  useEffect(() => {
+    checkUsernameAvailability(username)
+    return () => {
+      checkUsernameAvailability.cancel()
+    }
   }, [username])
+
+  useEffect(() => {
+    if (fullName) {
+      const newSuggestions = generateSuggestions(fullName)
+      checkSuggestionsAvailability(newSuggestions)
+    }
+  }, [fullName])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (loading || !username.trim() || !isAvailable) return
+    if (usernameStatus !== 'available') return
 
     try {
-      onComplete({ username: username.trim() })
+      onComplete({ username: username.toLowerCase() })
     } catch (error) {
-      console.error('Error submitting username:', error)
-      setError('Failed to save username. Please try again.')
+      console.error('Error updating username:', error instanceof Error ? error.message : 'Unknown error')
+    }
+  }
+
+  const getStatusIcon = () => {
+    switch (usernameStatus) {
+      case 'checking':
+        return <InlineSpinner className="h-5 w-5" />
+      case 'available':
+        return <Check className="h-5 w-5 text-emerald-500" />
+      case 'taken':
+      case 'invalid_format':
+      case 'too_short':
+      case 'api_error':
+        return <X className="h-5 w-5 text-red-500" />
+      default:
+        return null
     }
   }
 
@@ -125,94 +191,78 @@ export function UsernameStep({ initialUsername, onComplete, loading }: UsernameS
         </p>
       </motion.div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="relative group"
-        >
-          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors duration-200 group-focus-within:text-cyan-500 dark:group-focus-within:text-emerald-500" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="space-y-4"
+      >
+        <div className="relative">
           <Input
-            id="username" 
             type="text"
-            placeholder="Choose a username" 
             value={username}
-            onChange={(e) => setUsername(e.target.value)} 
-            error={error || undefined}
-            required 
+            onChange={(e) => setUsernameState(e.target.value)}
+            placeholder="Enter username"
+            className="pr-10"
             disabled={loading}
-            className="pl-12 text-base py-3"
           />
-          <AnimatePresence mode="wait">
-            {isChecking ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2"
-              >
-                <div className="w-5 h-5 border-2 border-cyan-500 dark:border-emerald-500 border-t-transparent rounded-full animate-spin" />
-              </motion.div>
-            ) : isAvailable !== null && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2"
-              >
-                {isAvailable ? (
-                  <Check className="w-5 h-5 text-emerald-500" />
-                ) : (
-                  <X className="w-5 h-5 text-red-500" />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {getStatusIcon()}
+          </div>
+        </div>
+        {usernameError && (
+          <p className="text-sm text-red-500 mt-1">{usernameError}</p>
+        )}
+        {usernameStatus === 'available' && (
+          <p className="text-sm text-emerald-500 mt-1">Username is available!</p>
+        )}
 
         {/* Username Suggestions */}
-        <AnimatePresence>
-          {suggestedUsernames.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-3"
-            >
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <Sparkles className="w-4 h-4 text-cyan-500" />
-                <span>Suggested usernames:</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {suggestedUsernames.map((suggestion, index) => (
-                  <motion.button
-                    key={`${suggestion}-${index}`}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    type="button"
-                    onClick={() => setUsername(suggestion)}
-                    className="px-4 py-2 text-sm bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    {suggestion}
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {suggestions.length > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <Sparkles className="h-4 w-4" />
+              <span>Suggested usernames:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => setUsernameState(suggestion)}
+                  className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {isCheckingSuggestions && (
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <InlineSpinner className="h-4 w-4" />
+            <span>Checking suggestions...</span>
+          </div>
+        )}
+      </motion.div>
 
-        <Button
-          type="submit"
-          isLoading={loading}
-          disabled={loading || !username.trim() || !isAvailable}
-          className="w-full mt-4 py-2.5 text-sm font-medium"
-          variant="primary"
-        >
-          Continue
-        </Button>
-      </form>
+      <Button
+        type="submit"
+        onClick={handleSubmit}
+        isLoading={loading}
+        loadingText="Setting Username..."
+        disabled={loading || usernameStatus !== 'available'}
+        className="w-full mt-4 py-2.5 text-sm font-medium bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+        variant="primary"
+      >
+        {loading ? (
+          <div className="flex items-center justify-center space-x-2">
+            <InlineSpinner className="h-4 w-4 text-white" />
+            <span>Setting Username...</span>
+          </div>
+        ) : (
+          'Continue'
+        )}
+      </Button>
     </motion.div>
   )
 } 

@@ -243,6 +243,7 @@ export default function ResetPasswordPage() {
                 type="submit" 
                 fullWidth 
                 isLoading={isLoading} 
+                loadingText='Updating Password...'
                 disabled={isLoading} 
                 size="lg"
                 className="mt-6"

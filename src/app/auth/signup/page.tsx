@@ -53,17 +53,22 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (loading) return
 
+    // Validate passwords match
     if (form.password !== form.confirmPassword) {
       return
     }
 
+    // Validate password requirements
     if (!passwordRequirements.every(req => req.met)) {
       return
     }
 
-    await signUp(form.email, form.password, form.fullName)
+    try {
+      await signUp(form.email, form.password, form.fullName)
+    } catch (err) {
+      console.error('Signup error:', err)
+    }
   }
 
   const handleBack = () => {
@@ -111,6 +116,22 @@ export default function SignUpPage() {
       <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2">Create your account</h2>
       <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-8">Start your journey with KoruSync</p>
       
+      {error && (
+        <div className="mb-6 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+          {error.includes('already registered') && (
+            <div className="mt-2 text-center">
+              <Link 
+                href="/auth/login" 
+                className="text-sm text-cyan-600 dark:text-cyan-400 hover:underline"
+              >
+                Go to Login
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="relative">
           <div className="flex items-center w-full px-4 py-3">
@@ -155,7 +176,6 @@ export default function SignUpPage() {
               placeholder="   Create Password" 
               value={form.password} 
               onChange={handleChange} 
-              error={error || undefined}
               required 
               disabled={loading}
               className="border-0 bg-transparent focus:ring-0 px-3 flex-1"
@@ -169,20 +189,6 @@ export default function SignUpPage() {
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-        </div>
-
-        {/* Password Requirements */}
-        <div className="space-y-2 text-sm bg-gray-50/50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
-          {passwordRequirements.map((req, index) => (
-            <div key={index} className="flex items-center text-gray-500 dark:text-gray-400">
-              {req.met ? (
-                <Check className="w-4 h-4 text-emerald-500 mr-2" />
-              ) : (
-                <X className="w-4 h-4 text-red-500 mr-2" />
-              )}
-              {req.text}
-            </div>
-          ))}
         </div>
 
         <div className="relative">
@@ -209,22 +215,26 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          By signing up, you agree to our{' '}
-          <Link href="/terms" className="text-cyan-600 dark:text-cyan-400 hover:underline">
-            Terms of Service
-          </Link>
-          {' '}and{' '}
-          <Link href="/privacy" className="text-cyan-600 dark:text-cyan-400 hover:underline">
-            Privacy Policy
-          </Link>
-        </p>
+        {/* Password Requirements - Compact Version */}
+        <div className="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+          {passwordRequirements.map((req, index) => (
+            <div key={index} className="flex items-center">
+              {req.met ? (
+                <Check className="w-3 h-3 text-emerald-500 mr-1" />
+              ) : (
+                <X className="w-3 h-3 text-red-500 mr-1" />
+              )}
+              {req.text}
+            </div>
+          ))}
+        </div>
 
         <Button 
           type="submit" 
           fullWidth 
           isLoading={loading} 
-          disabled={loading || !passwordRequirements.every(req => req.met)} 
+          loadingText='Creating account...'
+          disabled={loading || !passwordRequirements.every(req => req.met) || form.password !== form.confirmPassword} 
           size="lg"
           className="mt-6"
         >
@@ -246,15 +256,28 @@ export default function SignUpPage() {
         <SocialLoginButtons />
       </div>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-8">
-        Already have an account?{' '}
-        <Link 
-          href="/auth/login" 
-          className="text-cyan-600 dark:text-cyan-400 hover:underline transition-colors duration-200"
-        >
-          Log in
-        </Link>
-      </p>
+      <div className="mt-8 space-y-4">
+        <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+          Already have an account?{' '}
+          <Link 
+            href="/auth/login" 
+            className="text-cyan-600 dark:text-cyan-400 hover:underline transition-colors duration-200"
+          >
+            Log in
+          </Link>
+        </p>
+
+        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+          By signing up, you agree to our{' '}
+          <Link href="/terms" className="text-cyan-600 dark:text-cyan-400 hover:underline">
+            Terms of Service
+          </Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="text-cyan-600 dark:text-cyan-400 hover:underline">
+            Privacy Policy
+          </Link>
+        </p>
+      </div>
     </div>
   )
 } 
