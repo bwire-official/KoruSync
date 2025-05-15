@@ -35,14 +35,15 @@ export default function UsernameStep({ initialUsername, onComplete, loading, ful
     if (!name) return []
     
     const nameParts = name.toLowerCase().split(' ')
-    const suggestions = [
+    const baseSuggestions = [
       nameParts[0], // First name
       nameParts[0] + nameParts[1]?.charAt(0), // First name + first letter of last name
       nameParts[0] + Math.floor(Math.random() * 1000), // First name + random number
       nameParts[0] + '_' + nameParts[1]?.charAt(0), // First name + underscore + first letter of last name
     ].filter(Boolean) // Remove any undefined values
     
-    return suggestions
+    // Remove duplicates while preserving order
+    return [...new Set(baseSuggestions)]
   }
 
   // Check if a username is available
@@ -53,14 +54,17 @@ export default function UsernameStep({ initialUsername, onComplete, loading, ful
       return
     }
 
+    // Normalize username to lowercase for consistent checking
+    const normalizedUsername = username.toLowerCase().trim()
+
     // Client-side validation
-    if (username.length < 3) {
+    if (normalizedUsername.length < 3) {
       setUsernameStatus('too_short')
       setUsernameError('Username must be at least 3 characters')
       return
     }
 
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    if (!/^[a-zA-Z0-9_]+$/.test(normalizedUsername)) {
       setUsernameStatus('invalid_format')
       setUsernameError('Username can only contain letters, numbers, and underscores')
       return
@@ -68,24 +72,27 @@ export default function UsernameStep({ initialUsername, onComplete, loading, ful
 
     setUsernameStatus('checking')
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('username')
-        .ilike('username', username.toLowerCase())
-        .maybeSingle()
+      // Use the database function to check username availability
+      const { data, error: checkError } = await supabase
+        .rpc('check_username_availability', {
+          username_to_check: normalizedUsername
+        })
 
-      if (error) {
-        console.error('Supabase error:', error)
-        throw new Error(error.message)
+      if (checkError) {
+        console.error('Error checking username:', checkError)
+        throw new Error(checkError.message)
       }
 
+      // The function returns true if username exists (is taken)
       if (data) {
         setUsernameStatus('taken')
         setUsernameError('This username is already taken')
-      } else {
-        setUsernameStatus('available')
-        setUsernameError(null)
+        return
       }
+
+      // If we get here, username is available
+      setUsernameStatus('available')
+      setUsernameError(null)
     } catch (error) {
       console.error('Error checking username:', error instanceof Error ? error.message : 'Unknown error')
       setUsernameStatus('api_error')
@@ -97,24 +104,40 @@ export default function UsernameStep({ initialUsername, onComplete, loading, ful
   const checkSuggestionsAvailability = async (suggestions: string[]) => {
     setIsCheckingSuggestions(true)
     const availableSuggestions: string[] = []
+    const checkedUsernames = new Set<string>() // Track checked usernames to avoid duplicates
 
     for (const suggestion of suggestions) {
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('username')
-          .ilike('username', suggestion.toLowerCase())
-          .maybeSingle()
+      // Normalize suggestion to lowercase
+      const normalizedSuggestion = suggestion.toLowerCase().trim()
+      
+      // Skip if we've already checked this username
+      if (checkedUsernames.has(normalizedSuggestion)) continue
+      checkedUsernames.add(normalizedSuggestion)
 
-        if (!error && !data) {
-          availableSuggestions.push(suggestion)
+      try {
+        // Use the database function to check username availability
+        const { data, error: checkError } = await supabase
+          .rpc('check_username_availability', {
+            username_to_check: normalizedSuggestion
+          })
+
+        if (checkError) {
+          console.error('Error checking suggestion:', checkError)
+          continue // Skip this suggestion if there's an error
+        }
+
+        // The function returns true if username exists (is taken)
+        // If username is not taken (data is false), add it to available suggestions
+        if (!data) {
+          availableSuggestions.push(suggestion) // Use original suggestion for display
         }
       } catch (error) {
         console.error('Error checking suggestion:', error)
       }
     }
 
-    setSuggestions(availableSuggestions)
+    // Remove any duplicates from available suggestions
+    setSuggestions([...new Set(availableSuggestions)])
     setIsCheckingSuggestions(false)
   }
 
@@ -137,7 +160,8 @@ export default function UsernameStep({ initialUsername, onComplete, loading, ful
     if (usernameStatus !== 'available') return
 
     try {
-      onComplete({ username: username.toLowerCase() })
+      // Normalize username to lowercase before submitting
+      onComplete({ username: username.toLowerCase().trim() })
     } catch (error) {
       console.error('Error updating username:', error instanceof Error ? error.message : 'Unknown error')
     }

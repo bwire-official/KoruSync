@@ -407,7 +407,9 @@ export default function OnboardingPage() {
             {/* Step Content */}
             <div className="mt-2 min-h-[250px]">
               <AnimatePresence mode="wait">
-                {renderStep()}
+                <motion.div key={currentStep}>
+                  {renderStep()}
+                </motion.div>
               </AnimatePresence>
             </div>
           </motion.div>
