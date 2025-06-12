@@ -16,7 +16,7 @@ import {
   PenLine,
   Sun,
   Moon,
-  Plus
+  Settings
 } from 'lucide-react'
 
 interface MainNavProps {
@@ -30,6 +30,7 @@ const navigation = [
   { name: 'Goals', href: '/dashboard/goals', icon: Target },
   { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
   { name: 'Journal', href: '/dashboard/journal', icon: PenLine },
+  { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 export function MainNav({ className }: MainNavProps) {
@@ -38,7 +39,7 @@ export function MainNav({ className }: MainNavProps) {
 
   return (
     <nav className={cn(
-      "sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hidden md:block",
+      "fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 hidden md:block",
       className
     )}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -83,36 +84,14 @@ export function MainNav({ className }: MainNavProps) {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Quick Add Button */}
-            <Button
-              variant="primary"
-              size="sm"
-              className="flex items-center"
-              onClick={() => {/* TODO: Implement quick add */}}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Quick Add
-            </Button>
-
             {/* Theme Toggle */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center"
+            <button
               onClick={toggleTheme}
+              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+              aria-label="Toggle theme"
             >
-              {theme === 'dark' ? (
-                <>
-                  <Sun className="h-4 w-4 mr-2 text-yellow-500" />
-                  Light Mode
-                </>
-              ) : (
-                <>
-                  <Moon className="h-4 w-4 mr-2 text-gray-700" />
-                  Dark Mode
-                </>
-              )}
-            </Button>
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
 
             {/* User Profile Menu */}
             <UserProfileMenu />

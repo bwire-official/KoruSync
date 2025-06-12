@@ -4,11 +4,11 @@ import { ReactNode } from 'react'
 import { MainNav } from '@/components/navigation/MainNav'
 import { BottomNav } from '@/components/navigation/BottomNav'
 
-interface DashboardLayoutProps {
+interface SettingsLayoutProps {
   children: ReactNode
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function SettingsLayout({ children }: SettingsLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Main Navigation (Desktop only, lg and up) */}

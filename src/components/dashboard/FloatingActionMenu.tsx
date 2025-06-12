@@ -48,7 +48,7 @@ export function FloatingActionMenu() {
         router.push('/dashboard/tasks')
         setIsOpen(false)
       },
-      color: 'bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700'
+      color: 'bg-cyan-500 hover:bg-cyan-600 dark:bg-cyan-600 dark:hover:bg-cyan-700'
     },
     {
       icon: <Layers className="w-5 h-5" />,
@@ -57,7 +57,7 @@ export function FloatingActionMenu() {
         router.push('/dashboard/pillars')
         setIsOpen(false)
       },
-      color: 'bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700'
+      color: 'bg-cyan-500 hover:bg-cyan-600 dark:bg-cyan-600 dark:hover:bg-cyan-700'
     },
     {
       icon: <Target className="w-5 h-5" />,
@@ -66,7 +66,7 @@ export function FloatingActionMenu() {
         router.push('/dashboard/goals')
         setIsOpen(false)
       },
-      color: 'bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700'
+      color: 'bg-cyan-500 hover:bg-cyan-600 dark:bg-cyan-600 dark:hover:bg-cyan-700'
     },
     {
       icon: <BarChart3 className="w-5 h-5" />,
@@ -75,7 +75,7 @@ export function FloatingActionMenu() {
         router.push('/dashboard/reports')
         setIsOpen(false)
       },
-      color: 'bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700'
+      color: 'bg-cyan-500 hover:bg-cyan-600 dark:bg-cyan-600 dark:hover:bg-cyan-700'
     },
     {
       icon: <PenLine className="w-5 h-5" />,

@@ -28,15 +28,7 @@ const HighlightCard = ({ highlight }: { highlight: HighlightItem }) => {
   if (highlight.urgency === 'high') {
     urgencyIcon = (
       <span className="inline-flex" aria-label="High urgency">
-    urgencyIcon = (
-      <span className="inline-flex" aria-label="Medium urgency">
-    urgencyIcon = (
-      <span className="inline-flex" aria-label="Low urgency">
-        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-      </span>
-    );
-      </span>
-    );
+        <AlertCircle className="w-4 h-4 text-rose-500" />
       </span>
     );
   } else if (highlight.urgency === 'medium') {
@@ -63,9 +55,9 @@ const HighlightCard = ({ highlight }: { highlight: HighlightItem }) => {
 
   return (
     <div className={cn(
-      "group relative bg-white/50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
+      "group relative bg-white/50 dark:bg-gray-800/50 rounded-lg p-3 sm:p-4 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
     )}>
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2 sm:gap-3">
         <div className={cn("flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center", bgIconClass)}>
           {icon}
         </div>

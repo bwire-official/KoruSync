@@ -1,0 +1,7 @@
+fetch.js:30 
+ GET https://oizdbkrwymsezbjymcxn.supabase.co/rest/v1/users?select=*&id=eq.38b0da25-1d3a-4932-9a89-810a557e5a5b 406 (Not Acceptable)
+
+D:\KoruSync\src\app\settings\page.tsx:99 Error fetching profile: 
+{code: 'PGRST116', details: 'The result contains 0 rows', hint: null, message: 'JSON object requested, multiple (or no) rows returned'}
+D:\KoruSync\src\app\…ttings\page.tsx:121 Error loading profile: Error: Failed to load profile
+    at loadUserProfile (D:\KoruSync\src\app\…ngs\page.tsx:100:15)
